@@ -1,91 +1,73 @@
-v30.2 Release Notes
-===================
+v0.14.0 Release Notes
+=====================
 
-Bitcoin Core version v30.2 is now available from:
-
-  <https://bitcoincore.org/bin/bitcoin-core-30.2/>
-
-This release includes new features, various bug fixes and performance
-improvements, as well as updated translations.
+Zetacoin Core version v0.14.0 is the first release of the modernized
+Zetacoin Core, rebased onto Bitcoin Core 30.2.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tuaris/zetacoin/issues>
 
-To receive security and update notifications, please subscribe to:
+Upgrading from Zetacoin Core v0.13.2.1
+=======================================
 
-  <https://bitcoincore.org/en/list/announcements/join/>
-
-How to Upgrade
-==============
-
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
-
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+Shut down the old `zetacoind`. Wait until it has completely shut down, then
+replace the binary with the new version. The data directory (`.zetacoin`) is
+compatible — no migration is required. The blockchain does not need to be
+re-downloaded.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and tested on operating systems using the
-Linux Kernel 3.17+, macOS 13+, and Windows 10+. Bitcoin
-Core should also work on most other Unix-like systems but is not as
-frequently tested on them. It is not recommended to use Bitcoin Core on
-unsupported systems.
+Zetacoin Core is supported and tested on FreeBSD 15.0+, Linux (kernel 3.17+),
+macOS 13+, and Windows 10+.
 
 Notable changes
 ===============
 
-### Wallet
+### Modernized codebase
 
-- #34156 wallet: fix unnamed legacy wallet migration failure
-- #34215 wallettool: fix unnamed createfromdump failure walletsdir deletion
-- #34221 test: migration, avoid backup name mismatch in default_wallet_failure
+The entire codebase has been rebased from Bitcoin Core 0.13.2 onto Bitcoin
+Core 30.2. This brings 10 years of improvements including:
 
-### IPC
+- CMake build system (replaces autotools)
+- C++20
+- Descriptor wallets with SQLite backend
+- Compact block filters (BIP 157/158)
+- I2P and CJDNS network support
+- AssumeUTXO framework
+- Improved peer-to-peer protocol
+- Modern RPC interface
 
-- #33511 init: Fix Ctrl-C shutdown hangs during wait calls
+### Consensus preserved
 
-### Build
+All original Zetacoin consensus rules are preserved:
 
-- #33950 guix: reduce allowed exported symbols
-- #34107 build: Update minimum required Boost version
-- #34227 guix: Fix osslsigncode tests
+- SHA-256d proof of work
+- 30-second block target
+- 80-block averaging difficulty adjustment (asymmetric: +1% / -20%)
+- 1000 ZET initial block reward, halving every 80,640 blocks
+- 1 ZET minimum block reward (perpetual tail emission)
+- 200,000,000 ZET maximum money supply
+- BIP65 (CHECKLOCKTIMEVERIFY) activation at height 8,570,810
+- No hard fork
 
-### Test
+### Functional testnet and regtest
 
-- #34137 test: Avoid hard time.sleep(1) in feature_init.py
-- #34226 wallet: test: Relative wallet failed migration cleanup
+Zetacoin testnet and regtest networks are now functional with proper
+30-second block times and Zetacoin consensus parameters (these were
+non-functional in the original v0.13.2.1 release).
 
-### Fuzz
+### Binary names
 
-- #34091 fuzz: doc: remove any mention to address_deserialize_v2
-
-### Doc
-
-- #34182 doc: Update OpenBSD Build Guide
-
-### Misc
-
-- #34174 doc: update copyright year to 2026
+- `zetacoind` — daemon
+- `zetacoin-cli` — RPC client
+- `zetacoin-tx` — transaction utility
+- `zetacoin-wallet` — wallet tool
+- `zetacoin-util` — general utility
 
 Credits
 =======
 
-Thanks to everyone who directly contributed to this release:
-
-- Ava Chow
-- brunoerg
-- davidgumberg
-- fanquake
-- furszy
-- Hennadii Stepanov
-- MarcoFalke
-- Ryan Ofsky
-
-As well as to everyone that helped with translations on
-[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
+Zetacoin Core is derived from Bitcoin Core. Thanks to the Bitcoin Core
+developers for the upstream codebase.
