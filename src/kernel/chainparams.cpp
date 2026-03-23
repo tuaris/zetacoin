@@ -71,7 +71,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+    const char* pszTimestamp = "3 Aug 2013 - M&G - Mugabe wins Zim election with more than 60% of votes";
     const CScript genesisOutputScript = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -85,114 +85,117 @@ public:
         m_chain_type = ChainType::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
-        consensus.script_flag_exceptions.emplace( // BIP16 exception
-            uint256{"00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"}, SCRIPT_VERIFY_NONE);
-        consensus.script_flag_exceptions.emplace( // Taproot exception
-            uint256{"0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"}, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
-        consensus.BIP34Height = 227931;
-        consensus.BIP34Hash = uint256{"000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"};
-        consensus.BIP65Height = 388381; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
-        consensus.BIP66Height = 363725; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
-        consensus.CSVHeight = 419328; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
-        consensus.SegwitHeight = 481824; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
-        consensus.MinBIP9WarningHeight = 483840; // segwit activation height + miner confirmation window
-        consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.nSubsidyHalvingInterval = 80640;
+        // No script_flag_exceptions for Zetacoin
+        // TODO: BIP34 height needs to be determined from chain scan (commented out in old source)
+        consensus.BIP34Height = 1; // Placeholder — needs verification from reference node
+        consensus.BIP34Hash = uint256{};
+        consensus.BIP65Height = 8570810;
+        consensus.BIP66Height = 1; // Placeholder — needs verification from reference node
+        // TODO: CSV and SegWit heights must be determined from reference node getblockchaininfo
+        // after full sync. If they timed out without activating, set to max int.
+        consensus.CSVHeight = std::numeric_limits<int>::max(); // Placeholder — TBD from Phase 0 sync
+        consensus.SegwitHeight = std::numeric_limits<int>::max(); // Placeholder — TBD from Phase 0 sync
+        consensus.MinBIP9WarningHeight = 0;
+        consensus.powLimit = uint256{"00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        consensus.nPowTargetTimespan = 2 * 60; // two minutes
+        consensus.nPowTargetSpacing = 30; // 30 seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.enforce_BIP94 = false;
         consensus.fPowNoRetargeting = false;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815; // 90%
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 19160; // 95% of 20160
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 20160;
 
-        // Deployment of Taproot (BIPs 340-342)
+        // Taproot never activated on Zetacoin
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90%
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 19160;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 20160;
 
-        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000dee8e2a309ad8a9820433c68"};
-        consensus.defaultAssumeValid = uint256{"00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb"}; // 912683
+        // TODO: Compute from reference node after sync
+        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000000000000000000000000"};
+        consensus.defaultAssumeValid = uint256{}; // Disabled until we have a validated block hash
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        nDefaultPort = 8333;
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0xb5;
+        pchMessageStart[2] = 0x03;
+        pchMessageStart[3] = 0xdf;
+        nDefaultPort = 17333;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 810;
-        m_assumed_chain_state_size = 14;
+        m_assumed_blockchain_size = 10;
+        m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1375548986, 2089928209, 0x1e0fffff, 1, 1000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"});
-        assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
+        assert(consensus.hashGenesisBlock == uint256{"000006cab7aa2be2da91015902aa4458dd5fbb8778d175c36d429dc986f2bff4"});
+        assert(genesis.hashMerkleRoot == uint256{"d0227b8c3e3d07bce9656b3d9e474f050d23458aaead93357dcfdac9ab9b79f9"});
 
-        // Note that of those which support the service bits prefix, most only support a subset of
-        // possible options.
-        // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
-        // service bits we want, but we should get them updated to support all service bits wanted by any
-        // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seed.bitcoin.sipa.be."); // Pieter Wuille, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed.bluematt.me."); // Matt Corallo, only supports x9
-        vSeeds.emplace_back("seed.bitcoin.jonasschnelli.ch."); // Jonas Schnelli, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.btc.petertodd.net."); // Peter Todd, only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("seed.bitcoin.sprovoost.nl."); // Sjors Provoost
-        vSeeds.emplace_back("dnsseed.emzy.de."); // Stephan Oeste
-        vSeeds.emplace_back("seed.bitcoin.wiz.biz."); // Jason Maurice
-        vSeeds.emplace_back("seed.mainnet.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
+        vSeeds.emplace_back("zetacoin.securepayment.cc.");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,9);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,224);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "bc";
+        bech32_hrp = "zet";
 
-        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
+        vFixedSeeds.clear(); // No fixed seeds yet
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        m_assumeutxo_data = {
+        m_assumeutxo_data = {}; // No AssumeUTXO data yet
+
+        checkpointData = {
             {
-                .height = 840'000,
-                .hash_serialized = AssumeutxoHash{uint256{"a2a5521b1b5ab65f67818e5e8eccabb7171a517f9e2382208f77687310768f96"}},
-                .m_chain_tx_count = 991032194,
-                .blockhash = consteval_ctor(uint256{"0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"}),
-            },
-            {
-                .height = 880'000,
-                .hash_serialized = AssumeutxoHash{uint256{"dbd190983eaf433ef7c15f78a278ae42c00ef52e0fd2a54953782175fbadcea9"}},
-                .m_chain_tx_count = 1145604538,
-                .blockhash = consteval_ctor(uint256{"000000000000000000010b17283c3c400507969a9c2afd1dcf2082ec5cca2880"}),
-            },
-            {
-                .height = 910'000,
-                .hash_serialized = AssumeutxoHash{uint256{"4daf8a17b4902498c5787966a2b51c613acdab5df5db73f196fa59a4da2f1568"}},
-                .m_chain_tx_count = 1226586151,
-                .blockhash = consteval_ctor(uint256{"0000000000000000000108970acb9522ffd516eae17acddcb1bd16469194a821"}),
+                {      0, uint256{"000006cab7aa2be2da91015902aa4458dd5fbb8778d175c36d429dc986f2bff4"}},
+                {  30350, uint256{"000000000032d087f157871fbc41541a43ac30291f99ce5225d69fd132f8ecdf"}},
+                {  66438, uint256{"00000000000970ae1d1fddcdf363dfc49505caa2884367ad460839d0621d1f56"}},
+                { 103010, uint256{"000000000007204260b891b9aa8eb476132e74eb7539dc3e9ac2fb7bc7104ab8"}},
+                { 252509, uint256{"0000000000090c2b77a3247303784289fb6a18752d54e38e96d2b48eac245016"}},
+                { 470201, uint256{"00000000000102bdfdfc228ee34304f64650825fd1639a1f57a397af854b9df1"}},
+                { 523001, uint256{"00000000000076412e07ded5bcdf11c0ea6bfcada9e339cb31d312d8e60c3ef8"}},
+                { 569410, uint256{"000000000000085bbed51c9196314ee52281428ff5b1d8cade9140efe4b33381"}},
+                { 587317, uint256{"000000000000b81d6626e9fd0c869764dd992d5429442876a75894e24c0c15e2"}},
+                { 636469, uint256{"0000000000038394fe569fbd5a42484c69f15dae9f10982a7a7ed96bff4a359e"}},
+                { 720261, uint256{"000000000005658b461195d927cf3347ebf8a36e987a2d2be26ed4fce0f75b13"}},
+                { 815426, uint256{"000000000004958ee412205bc78e41061e3cb66b55cdd5230efceaaa07990f55"}},
+                { 870101, uint256{"000000000006fcd0f5cff20c46d9da02f7835137bce0629431f1968c6d1dcab5"}},
+                { 978901, uint256{"00000000000456f795ce33e9ad1757150c1b5155230e4438b3690004e00f7ede"}},
+                {1272500, uint256{"000000000001567d68a0197b43ec9c764d49a78cee9c318d58c5ae8d3a6a4a88"}},
+                {1410098, uint256{"000000000000ad1fe5f741c497aab1f4c9f2799ed2cce1c6715601e84c543368"}},
+                {1538097, uint256{"00000000000002f54303f5b45c1ec74c75f085034fe0438834bb6ed2cb2f78f1"}},
+                {1967101, uint256{"0000000000006f92c571a6b1a6923efd03320b6bb6bc0656c4f23d01e8664a85"}},
+                {2062289, uint256{"000000000001b7e95495d1f418f69498804397745f29e024d40dbe1ef4725af8"}},
+                {2229225, uint256{"000000000003c9990b62822e5be8a49bebae5e270c39db223d3504d2ecd38604"}},
+                {2647621, uint256{"0000000000019c07fe91065d5dee6b42af812830e04ce59efa7fad10cb020396"}},
+                {4086591, uint256{"00000000000284dcc409a09957de00a54bc63bcc3348305375f5df8b150fc4c4"}},
+                {4725861, uint256{"00000000000018b6b3d846b28153c03f009515216fb9ccc9b2b3e441d343af56"}},
+                {4849869, uint256{"000000000000a7d04b122d2e798cc6c8f8418aca94254e49dee420e69765bc11"}},
+                {4874572, uint256{"000000000000ac41b139efe9257159e8f4c42d0425d5344dab303ac0150c2384"}},
+                {5086747, uint256{"000000000004f4f433813246fd475d1b85357c1e6ab8d9ceecf372f4adae1e00"}},
+                {6950776, uint256{"000000000000291d02c1ec999510e59be6972f2988ca32f2d3e4077a315ab856"}},
+                {7953504, uint256{"0000000000005d5b27438369531e68854113bede432fab20943fd9f7b9c19a8f"}},
             }
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb
-            .nTime    = 1756722903,
-            .tx_count = 1235299397,
-            .dTxRate  = 5.456290459519495,
+            // Data from old Zetacoin source (last checkpoint at block 7953504)
+            .nTime    = 1513318583,
+            .tx_count = 9106966,
+            .dTxRate  = 2880.0 / 86400.0, // ~2880 tx/day
         };
     }
 };
