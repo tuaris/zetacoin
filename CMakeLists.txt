@@ -53,7 +53,7 @@ set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
 project(ZetacoinCore
   VERSION ${CLIENT_VERSION_MAJOR}.${CLIENT_VERSION_MINOR}.${CLIENT_VERSION_BUILD}
   DESCRIPTION "Zetacoin client software"
-  HOMEPAGE_URL "https://www.zetac.org/"
+  HOMEPAGE_URL "https://www.getzetacoin.com/"
   LANGUAGES NONE
 )
 

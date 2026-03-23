@@ -1,7 +1,7 @@
 Zetacoin Core integration/staging tree
 ======================================
 
-https://www.zetac.org
+https://www.getzetacoin.com
 
 What is Zetacoin?
 -----------------
