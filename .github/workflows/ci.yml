@@ -1,5 +1,5 @@
-# Zetacoin Core CI
-# Build on Linux, macOS, and Windows. Run validated unit tests on Linux.
+# Zetacoin Core CI — runs on PRs and pushes
+# Lightweight: Linux build + validated unit tests only
 
 name: CI
 on:
@@ -14,19 +14,14 @@ concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
-  linux-build-test:
-    name: 'Linux build + tests'
+  test:
+    name: 'Build and test (Linux)'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
@@ -41,114 +36,3 @@ jobs:
 
       - name: Run validation tests
         run: build/bin/test_bitcoin --run_test=validation_tests
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: zetacoin-linux-x86_64
-          path: |
-            build/bin/zetacoind
-            build/bin/zetacoin-cli
-            build/bin/zetacoin
-            build/bin/zetacoin-tx
-            build/bin/zetacoin-wallet
-            build/bin/zetacoin-util
-
-  macos-build:
-    name: 'macOS build'
-    runs-on: macos-14
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Install dependencies
-        env:
-          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-        run: |
-          brew install --quiet cmake boost libevent pkgconf sqlite zmq
-
-      - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF
-
-      - name: Build
-        run: cmake --build build -j$(sysctl -n hw.ncpu)
-
-      - name: Verify binary
-        run: build/bin/zetacoind --version
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: zetacoin-macos-arm64
-          path: |
-            build/bin/zetacoind
-            build/bin/zetacoin-cli
-            build/bin/zetacoin
-            build/bin/zetacoin-tx
-            build/bin/zetacoin-wallet
-            build/bin/zetacoin-util
-
-  windows-build:
-    name: 'Windows build'
-    runs-on: windows-2022
-    timeout-minutes: 90
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Configure Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Using vcpkg with MSBuild
-        run: |
-          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
-          # Workaround for libevent CMake compatibility
-          sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
-
-      - name: Restore vcpkg binary cache
-        uses: actions/cache/restore@v4
-        id: vcpkg-binary-cache
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: windows-vcpkg-binary-${{ hashFiles('vcpkg.json') }}
-
-      - name: Configure
-        run: |
-          cmake -B build --preset vs2022 \
-            -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
-            -DBUILD_GUI=OFF \
-            -DBUILD_TESTS=OFF \
-            -DBUILD_BENCH=OFF \
-            -DENABLE_IPC=OFF
-
-      - name: Save vcpkg binary cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true'
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: windows-vcpkg-binary-${{ hashFiles('vcpkg.json') }}
-
-      - name: Build
-        working-directory: build
-        run: cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
-
-      - name: Verify binary
-        working-directory: build
-        run: bin/Release/zetacoind.exe -version
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: zetacoin-windows-x86_64
-          path: |
-            build/bin/Release/zetacoind.exe
-            build/bin/Release/zetacoin-cli.exe
-            build/bin/Release/zetacoin.exe
-            build/bin/Release/zetacoin-tx.exe
-            build/bin/Release/zetacoin-wallet.exe
-            build/bin/Release/zetacoin-util.exe

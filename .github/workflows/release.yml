@@ -1,0 +1,131 @@
+# Zetacoin Core Release Builds — runs only when a tag is pushed
+# Builds release binaries for Linux, macOS, and Windows
+
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  linux:
+    name: 'Linux x86_64'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev
+
+      - name: Configure
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Strip binaries
+        run: strip build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacoin-linux-x86_64
+          path: |
+            build/bin/zetacoin
+            build/bin/zetacoind
+            build/bin/zetacoin-cli
+            build/bin/zetacoin-tx
+            build/bin/zetacoin-wallet
+            build/bin/zetacoin-util
+
+  macos:
+    name: 'macOS ARM64'
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq
+
+      - name: Configure
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j$(sysctl -n hw.ncpu)
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacoin-macos-arm64
+          path: |
+            build/bin/zetacoin
+            build/bin/zetacoind
+            build/bin/zetacoin-cli
+            build/bin/zetacoin-tx
+            build/bin/zetacoin-wallet
+            build/bin/zetacoin-util
+
+  windows:
+    name: 'Windows x86_64'
+    runs-on: windows-2022
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure vcpkg
+        run: |
+          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
+          sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
+
+      - name: Restore vcpkg cache
+        uses: actions/cache/restore@v4
+        id: vcpkg-cache
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: release-vcpkg-${{ hashFiles('vcpkg.json') }}
+
+      - name: Configure
+        run: |
+          cmake -B build --preset vs2022 \
+            -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_BENCH=OFF \
+            -DENABLE_IPC=OFF
+
+      - name: Save vcpkg cache
+        uses: actions/cache/save@v4
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: release-vcpkg-${{ hashFiles('vcpkg.json') }}
+
+      - name: Build
+        working-directory: build
+        run: cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetacoin-windows-x86_64
+          path: |
+            build/bin/Release/zetacoin.exe
+            build/bin/Release/zetacoind.exe
+            build/bin/Release/zetacoin-cli.exe
+            build/bin/Release/zetacoin-tx.exe
+            build/bin/Release/zetacoin-wallet.exe
+            build/bin/Release/zetacoin-util.exe
