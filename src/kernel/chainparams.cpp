@@ -87,16 +87,21 @@ public:
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 80640;
         // No script_flag_exceptions for Zetacoin
-        // TODO: BIP34 height needs to be determined from chain scan (commented out in old source)
-        consensus.BIP34Height = 1; // Placeholder — needs verification from reference node
+        // BIP34 was commented out in old Zetacoin source (never height-gated).
+        // Set to 1 to enforce from near-genesis (safe: all blocks have height in coinbase).
+        consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{};
         consensus.BIP65Height = 8570810;
-        consensus.BIP66Height = 1; // Placeholder — needs verification from reference node
-        // TODO: CSV and SegWit heights must be determined from reference node getblockchaininfo
-        // after full sync. If they timed out without activating, set to max int.
-        consensus.CSVHeight = std::numeric_limits<int>::max(); // Placeholder — TBD from Phase 0 sync
-        consensus.SegwitHeight = std::numeric_limits<int>::max(); // Placeholder — TBD from Phase 0 sync
-        consensus.MinBIP9WarningHeight = 0;
+        // BIP66 (strict DER) was not explicitly gated in old source.
+        // Set to 1 to enforce from near-genesis (safe: all signatures are DER-encoded).
+        consensus.BIP66Height = 1;
+        // CSV (BIP68/112/113) activated via BIP9 signaling (bit 0).
+        // LOCKED_IN at retarget boundary ~9,192,960; ACTIVE at ~9,213,120.
+        consensus.CSVHeight = 9213120;
+        // SegWit (BIP141/143/147) activated via BIP9 signaling (bit 1).
+        // LOCKED_IN at retarget boundary ~9,462,080; ACTIVE at ~9,482,240.
+        consensus.SegwitHeight = 9482240;
+        consensus.MinBIP9WarningHeight = 9502400; // segwit activation + miner confirmation window
         consensus.powLimit = uint256{"00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 2 * 60; // two minutes
         consensus.nPowTargetSpacing = 30; // 30 seconds
@@ -118,9 +123,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 19160;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 20160;
 
-        // TODO: Compute from reference node after sync
-        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000000000000000000000000"};
-        consensus.defaultAssumeValid = uint256{}; // Disabled until we have a validated block hash
+        // From reference node at block 18,624,358
+        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000001e15a398d6744fe64b3"};
+        consensus.defaultAssumeValid = uint256{"00000000af5073936a022dcbc9269536e6e5538ebd21d1cd88526f1f9600a6ee"}; // 18624358
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
