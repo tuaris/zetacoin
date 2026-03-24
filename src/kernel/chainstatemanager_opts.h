@@ -21,7 +21,11 @@
 class CChainParams;
 class ValidationSignals;
 
-static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
+// Zetacoin: increased from 24h to 30 days. The chain has long gaps between
+// blocks (up to 560 days observed). With the default 24h, a fully synced
+// node would permanently stay in IBD mode and refuse to relay transactions
+// or serve getblocktemplate for mining. See doc/zetacoin-chain-gaps.md.
+static constexpr auto DEFAULT_MAX_TIP_AGE{std::chrono::hours{24 * 30}};
 
 namespace kernel {
 

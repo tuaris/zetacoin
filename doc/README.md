@@ -57,6 +57,9 @@ The Zetacoin repo's [root README](/README.md) contains relevant information on t
 - [Benchmarking](benchmarking.md)
 - [Internal Design Docs](design/)
 
+### Zetacoin-Specific
+- [Chain Gaps and maxtipage](zetacoin-chain-gaps.md)
+
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
 - [zetacoin.conf Configuration File](zetacoin-conf.md)
