@@ -2505,11 +2505,11 @@ static RPCHelpMan scanblocks()
             scan_result_abort,
         },
         RPCExamples{
-            HelpExampleCli("scanblocks", "start '[\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"]' 300000") +
-            HelpExampleCli("scanblocks", "start '[\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"]' 100 150 basic") +
+            HelpExampleCli("scanblocks", "start '[\"addr(zcrt1q7t6kk4zw42ykv2ldtm806f3xrf5sd475d8ln0c)\"]' 300000") +
+            HelpExampleCli("scanblocks", "start '[\"addr(zcrt1q7t6kk4zw42ykv2ldtm806f3xrf5sd475d8ln0c)\"]' 100 150 basic") +
             HelpExampleCli("scanblocks", "status") +
-            HelpExampleRpc("scanblocks", "\"start\", [\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"], 300000") +
-            HelpExampleRpc("scanblocks", "\"start\", [\"addr(bcrt1q4u4nsgk6ug0sqz7r3rj9tykjxrsl0yy4d0wwte)\"], 100, 150, \"basic\"") +
+            HelpExampleRpc("scanblocks", "\"start\", [\"addr(zcrt1q7t6kk4zw42ykv2ldtm806f3xrf5sd475d8ln0c)\"], 300000") +
+            HelpExampleRpc("scanblocks", "\"start\", [\"addr(zcrt1q7t6kk4zw42ykv2ldtm806f3xrf5sd475d8ln0c)\"], 100, 150, \"basic\"") +
             HelpExampleRpc("scanblocks", "\"status\"")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
