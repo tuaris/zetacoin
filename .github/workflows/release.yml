@@ -1,11 +1,18 @@
-# Zetacoin Core Release Builds — runs only when a tag is pushed
-# Builds release binaries for Linux, macOS, and Windows
+# Zetacoin Core Release — runs only on version tags
+# Builds distributable archives for Linux, macOS, and Windows
+# Creates a GitHub Release with the archives attached
 
 name: Release
 on:
   push:
     tags:
       - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  VERSION: ${{ github.ref_name }}
 
 jobs:
   linux:
@@ -22,7 +29,7 @@ jobs:
           sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
 
       - name: Build
         run: cmake --build build -j$(nproc)
@@ -30,17 +37,22 @@ jobs:
       - name: Strip binaries
         run: strip build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util
 
-      - name: Upload artifacts
+      - name: Package
+        run: |
+          DIST=zetacoin-${VERSION#v}-linux-x86_64
+          mkdir -p ${DIST}/bin
+          cp build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli \
+             build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util \
+             ${DIST}/bin/
+          cp COPYING README.md ${DIST}/
+          tar czf ${DIST}.tar.gz ${DIST}
+          sha256sum ${DIST}.tar.gz > ${DIST}.tar.gz.sha256
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zetacoin-linux-x86_64
-          path: |
-            build/bin/zetacoin
-            build/bin/zetacoind
-            build/bin/zetacoin-cli
-            build/bin/zetacoin-tx
-            build/bin/zetacoin-wallet
-            build/bin/zetacoin-util
+          name: linux-x86_64
+          path: zetacoin-*-linux-x86_64.tar.gz*
 
   macos:
     name: 'macOS ARM64'
@@ -61,17 +73,22 @@ jobs:
       - name: Build
         run: cmake --build build -j$(sysctl -n hw.ncpu)
 
-      - name: Upload artifacts
+      - name: Package
+        run: |
+          DIST=zetacoin-${VERSION#v}-macos-arm64
+          mkdir -p ${DIST}/bin
+          cp build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli \
+             build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util \
+             ${DIST}/bin/
+          cp COPYING README.md ${DIST}/
+          tar czf ${DIST}.tar.gz ${DIST}
+          shasum -a 256 ${DIST}.tar.gz > ${DIST}.tar.gz.sha256
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zetacoin-macos-arm64
-          path: |
-            build/bin/zetacoin
-            build/bin/zetacoind
-            build/bin/zetacoin-cli
-            build/bin/zetacoin-tx
-            build/bin/zetacoin-wallet
-            build/bin/zetacoin-util
+          name: macos-arm64
+          path: zetacoin-*-macos-arm64.tar.gz*
 
   windows:
     name: 'Windows x86_64'
@@ -100,11 +117,11 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -B build --preset vs2022 \
-            -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
-            -DBUILD_GUI=OFF \
-            -DBUILD_TESTS=OFF \
-            -DBUILD_BENCH=OFF \
+          cmake -B build --preset vs2022 `
+            -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+            -DBUILD_GUI=OFF `
+            -DBUILD_TESTS=OFF `
+            -DBUILD_BENCH=OFF `
             -DENABLE_IPC=OFF
 
       - name: Save vcpkg cache
@@ -116,16 +133,53 @@ jobs:
 
       - name: Build
         working-directory: build
-        run: cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
+        run: cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
-      - name: Upload artifacts
+      - name: Package
+        shell: pwsh
+        run: |
+          $ver = "${{ env.VERSION }}".TrimStart("v")
+          $dist = "zetacoin-${ver}-windows-x86_64"
+          New-Item -ItemType Directory -Path "${dist}/bin" -Force
+          Copy-Item build/bin/Release/zetacoin.exe,
+                    build/bin/Release/zetacoind.exe,
+                    build/bin/Release/zetacoin-cli.exe,
+                    build/bin/Release/zetacoin-tx.exe,
+                    build/bin/Release/zetacoin-wallet.exe,
+                    build/bin/Release/zetacoin-util.exe `
+                    -Destination "${dist}/bin/"
+          Copy-Item COPYING, README.md -Destination "${dist}/"
+          Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
+          (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zetacoin-windows-x86_64
-          path: |
-            build/bin/Release/zetacoin.exe
-            build/bin/Release/zetacoind.exe
-            build/bin/Release/zetacoin-cli.exe
-            build/bin/Release/zetacoin-tx.exe
-            build/bin/Release/zetacoin-wallet.exe
-            build/bin/Release/zetacoin-util.exe
+          name: windows-x86_64
+          path: zetacoin-*-windows-x86_64.zip*
+
+  release:
+    name: 'Create GitHub Release'
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Zetacoin Core ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: dist/*
