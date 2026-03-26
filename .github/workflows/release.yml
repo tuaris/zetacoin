@@ -29,13 +29,13 @@ jobs:
           sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_TX=ON -DBUILD_UTIL=ON -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(nproc)
 
       - name: Strip binaries
-        run: strip build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util
+        run: strip build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli build/bin/zetacoin-tx build/bin/zetacoin-util build/bin/zetacoin-wallet
 
       - name: Package
         run: |
@@ -68,7 +68,7 @@ jobs:
         run: brew install --quiet cmake boost libevent pkgconf sqlite zmq
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_TX=ON -DBUILD_UTIL=ON -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(sysctl -n hw.ncpu)
@@ -108,6 +108,7 @@ jobs:
         run: choco install nsis -y
 
       - name: Configure vcpkg
+        shell: bash
         run: |
           echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
           sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
