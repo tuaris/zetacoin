@@ -93,7 +93,7 @@ jobs:
   windows:
     name: 'Windows x86_64'
     runs-on: windows-2022
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@v5
@@ -102,6 +102,10 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y
 
       - name: Configure vcpkg
         run: |
@@ -113,14 +117,14 @@ jobs:
         id: vcpkg-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: release-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: release-gui-vcpkg-${{ hashFiles('vcpkg.json') }}
 
       - name: Configure
         run: |
           cmake -B build --preset vs2022 `
             -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
-            -DBUILD_GUI=OFF `
-            -DBUILD_TESTS=OFF `
+            -DBUILD_GUI=ON `
+            -DBUILD_TESTS=ON `
             -DBUILD_BENCH=OFF `
             -DENABLE_IPC=OFF
 
@@ -129,19 +133,24 @@ jobs:
         if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: release-vcpkg-${{ hashFiles('vcpkg.json') }}
+          key: release-gui-vcpkg-${{ hashFiles('vcpkg.json') }}
 
       - name: Build
         working-directory: build
         run: cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
-      - name: Package
+      - name: Build NSIS installer
+        working-directory: build
+        run: cmake --build . --config Release --target deploy
+
+      - name: Package zip
         shell: pwsh
         run: |
           $ver = "${{ env.VERSION }}".TrimStart("v")
           $dist = "zetacoin-${ver}-windows-x86_64"
           New-Item -ItemType Directory -Path "${dist}/bin" -Force
           Copy-Item build/bin/Release/zetacoin.exe,
+                    build/bin/Release/zetacoin-qt.exe,
                     build/bin/Release/zetacoind.exe,
                     build/bin/Release/zetacoin-cli.exe,
                     build/bin/Release/zetacoin-tx.exe,
@@ -152,11 +161,24 @@ jobs:
           Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
           (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
 
-      - name: Upload artifact
+      - name: Rename installer
+        shell: pwsh
+        run: |
+          $ver = "${{ env.VERSION }}".TrimStart("v")
+          Move-Item build/zetacoin-win64-setup.exe "zetacoin-${ver}-win64-setup.exe"
+          (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
+
+      - name: Upload zip
         uses: actions/upload-artifact@v4
         with:
-          name: windows-x86_64
+          name: windows-x86_64-zip
           path: zetacoin-*-windows-x86_64.zip*
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64-setup
+          path: zetacoin-*-win64-setup.exe*
 
   release:
     name: 'Create GitHub Release'
