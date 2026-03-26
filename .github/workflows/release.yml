@@ -30,10 +30,10 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev
+          sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev libgl-dev
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=ON -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(nproc)
@@ -66,10 +66,10 @@ jobs:
       - name: Install dependencies
         env:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq
+        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq qt@6 qrencode
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=ON -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(sysctl -n hw.ncpu)
