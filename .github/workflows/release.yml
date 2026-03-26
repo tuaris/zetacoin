@@ -106,7 +106,9 @@ jobs:
 
       - name: Install NSIS
         shell: pwsh
-        run: choco install nsis -y
+        run: |
+          choco install nsis -y
+          echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Configure vcpkg
         shell: bash
@@ -128,7 +130,8 @@ jobs:
             -DBUILD_GUI=ON `
             -DBUILD_TESTS=ON `
             -DBUILD_BENCH=OFF `
-            -DENABLE_IPC=OFF
+            -DENABLE_IPC=OFF `
+            -DMAKENSIS_EXECUTABLE="C:/Program Files (x86)/NSIS/makensis.exe"
 
       - name: Save vcpkg cache
         uses: actions/cache/save@v4
