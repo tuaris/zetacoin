@@ -144,13 +144,45 @@ jobs:
         working-directory: build
         run: cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
 
-      - name: Build NSIS installer
-        working-directory: build
-        run: cmake --build . --config Release --target deploy
-        continue-on-error: true
-
       - name: Install
         run: cmake --install build --prefix install --config Release --strip
+
+      - name: Prepare NSIS installer
+        shell: pwsh
+        run: |
+          $ver = "${{ env.VERSION }}".TrimStart("v")
+          # Stage release binaries for NSIS
+          New-Item -ItemType Directory -Path build/release -Force
+          Copy-Item install/bin/*.exe -Destination build/release/
+          # Generate .nsi from template (replace @variables@)
+          $nsi = Get-Content share/setup.nsi.in -Raw
+          $nsi = $nsi -replace '@abs_top_srcdir@', (Get-Location).Path.Replace('\','/')
+          $nsi = $nsi -replace '@abs_top_builddir@', ((Get-Location).Path + '/build').Replace('\','/')
+          $nsi = $nsi -replace '@CLIENT_NAME@', 'Zetacoin Core'
+          $nsi = $nsi -replace '@CLIENT_VERSION_MAJOR@', '0'
+          $nsi = $nsi -replace '@CLIENT_VERSION_MINOR@', '14'
+          $nsi = $nsi -replace '@CLIENT_VERSION_BUILD@', '0'
+          $nsi = $nsi -replace '@CLIENT_VERSION_STRING@', $ver
+          $nsi = $nsi -replace '@CLIENT_URL@', 'https://github.com/tuaris/zetacoin'
+          $nsi = $nsi -replace '@CLIENT_TARNAME@', 'zetacoin'
+          $nsi = $nsi -replace '@BITCOIN_GUI_NAME@', 'zetacoin-qt'
+          $nsi = $nsi -replace '@BITCOIN_WRAPPER_NAME@', 'zetacoin'
+          $nsi = $nsi -replace '@BITCOIN_DAEMON_NAME@', 'zetacoind'
+          $nsi = $nsi -replace '@BITCOIN_CLI_NAME@', 'zetacoin-cli'
+          $nsi = $nsi -replace '@BITCOIN_TX_NAME@', 'zetacoin-tx'
+          $nsi = $nsi -replace '@BITCOIN_WALLET_TOOL_NAME@', 'zetacoin-wallet'
+          $nsi = $nsi -replace '@BITCOIN_TEST_NAME@', 'test_bitcoin'
+          $nsi = $nsi -replace '@EXEEXT@', '.exe'
+          $nsi = $nsi -replace '@COPYRIGHT_YEAR@', (Get-Date).Year
+          $nsi = $nsi -replace '@COPYRIGHT_HOLDERS_FINAL@', 'The Zetacoin Core developers'
+          $nsi | Out-File -FilePath build/zetacoin-win64-setup.nsi -Encoding ascii
+          # Create required files
+          if (-not (Test-Path share/examples/zetacoin.conf)) { New-Item share/examples/zetacoin.conf -ItemType File -Force }
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\NSIS\makensis.exe" -V2 build/zetacoin-win64-setup.nsi
 
       - name: Package zip
         shell: pwsh
@@ -162,15 +194,12 @@ jobs:
           Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
           (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
 
-      - name: Rename installer
+      - name: Package installer
         shell: pwsh
-        continue-on-error: true
         run: |
           $ver = "${{ env.VERSION }}".TrimStart("v")
-          if (Test-Path build/zetacoin-win64-setup.exe) {
-            Move-Item build/zetacoin-win64-setup.exe "zetacoin-${ver}-win64-setup.exe"
-            (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
-          }
+          Move-Item build/zetacoin-win64-setup.exe "zetacoin-${ver}-win64-setup.exe"
+          (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
 
       - name: Upload zip
         uses: actions/upload-artifact@v4
@@ -179,7 +208,6 @@ jobs:
           path: zetacoin-*-windows-x86_64.zip*
 
       - name: Upload installer
-        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64-setup
