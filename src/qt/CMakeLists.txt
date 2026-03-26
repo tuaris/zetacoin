@@ -261,6 +261,7 @@ target_link_libraries(bitcoin-qt
   bitcoin_node
 )
 
+set_target_properties(bitcoin-qt PROPERTIES OUTPUT_NAME zetacoin-qt)
 import_plugins(bitcoin-qt)
 install_binary_component(bitcoin-qt HAS_MANPAGE)
 if(WIN32)
@@ -278,6 +279,7 @@ if(ENABLE_IPC)
     bitcoin_node
     bitcoin_ipc
   )
+  set_target_properties(bitcoin-gui PROPERTIES OUTPUT_NAME zetacoin-gui)
   import_plugins(bitcoin-gui)
   install_binary_component(bitcoin-gui INTERNAL)
   if(WIN32)
