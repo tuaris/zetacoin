@@ -156,8 +156,8 @@ jobs:
           Copy-Item install/bin/*.exe -Destination build/release/
           # Generate .nsi from template (replace @variables@)
           $nsi = Get-Content share/setup.nsi.in -Raw
-          $nsi = $nsi -replace '@abs_top_srcdir@', (Get-Location).Path.Replace('\','/')
-          $nsi = $nsi -replace '@abs_top_builddir@', ((Get-Location).Path + '/build').Replace('\','/')
+          $nsi = $nsi -replace '@abs_top_srcdir@', (Get-Location).Path
+          $nsi = $nsi -replace '@abs_top_builddir@', ((Get-Location).Path + '\build')
           $nsi = $nsi -replace '@CLIENT_NAME@', 'Zetacoin Core'
           $nsi = $nsi -replace '@CLIENT_VERSION_MAJOR@', '0'
           $nsi = $nsi -replace '@CLIENT_VERSION_MINOR@', '14'
