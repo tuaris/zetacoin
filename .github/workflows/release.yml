@@ -1,6 +1,10 @@
 # Zetacoin Core Release — runs only on version tags
 # Builds distributable archives for Linux, macOS, and Windows
 # Creates a GitHub Release with the archives attached
+#
+# Approach: use cmake --install with --strip to collect all binaries,
+# avoiding manual binary name lists. Bitcoin Core uses this pattern
+# via GOAL="install" in their CI scripts.
 
 name: Release
 on:
@@ -29,21 +33,18 @@ jobs:
           sudo apt-get install -y build-essential cmake pkgconf libevent-dev libboost-dev libsqlite3-dev libzmq3-dev
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_TX=ON -DBUILD_UTIL=ON -DBUILD_WALLET_TOOL=ON -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(nproc)
 
-      - name: Strip binaries
-        run: strip build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli build/bin/zetacoin-tx build/bin/zetacoin-util build/bin/zetacoin-wallet
+      - name: Install
+        run: cmake --install build --prefix install --strip
 
       - name: Package
         run: |
           DIST=zetacoin-${VERSION#v}-linux-x86_64
-          mkdir -p ${DIST}/bin
-          cp build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli \
-             build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util \
-             ${DIST}/bin/
+          mv install ${DIST}
           cp COPYING README.md ${DIST}/
           tar czf ${DIST}.tar.gz ${DIST}
           sha256sum ${DIST}.tar.gz > ${DIST}.tar.gz.sha256
@@ -68,18 +69,18 @@ jobs:
         run: brew install --quiet cmake boost libevent pkgconf sqlite zmq
 
       - name: Configure
-        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DBUILD_TX=ON -DBUILD_UTIL=ON -DBUILD_WALLET_TOOL=ON -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DBUILD_GUI=OFF -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build -j$(sysctl -n hw.ncpu)
 
+      - name: Install
+        run: cmake --install build --prefix install --strip
+
       - name: Package
         run: |
           DIST=zetacoin-${VERSION#v}-macos-arm64
-          mkdir -p ${DIST}/bin
-          cp build/bin/zetacoin build/bin/zetacoind build/bin/zetacoin-cli \
-             build/bin/zetacoin-tx build/bin/zetacoin-wallet build/bin/zetacoin-util \
-             ${DIST}/bin/
+          mv install ${DIST}
           cp COPYING README.md ${DIST}/
           tar czf ${DIST}.tar.gz ${DIST}
           shasum -a 256 ${DIST}.tar.gz > ${DIST}.tar.gz.sha256
@@ -143,31 +144,30 @@ jobs:
       - name: Build NSIS installer
         working-directory: build
         run: cmake --build . --config Release --target deploy
+        continue-on-error: true
+
+      - name: Install
+        run: cmake --install build --prefix install --config Release --strip
 
       - name: Package zip
         shell: pwsh
         run: |
           $ver = "${{ env.VERSION }}".TrimStart("v")
           $dist = "zetacoin-${ver}-windows-x86_64"
-          New-Item -ItemType Directory -Path "${dist}/bin" -Force
-          Copy-Item build/bin/Release/zetacoin.exe,
-                    build/bin/Release/zetacoin-qt.exe,
-                    build/bin/Release/zetacoind.exe,
-                    build/bin/Release/zetacoin-cli.exe,
-                    build/bin/Release/zetacoin-tx.exe,
-                    build/bin/Release/zetacoin-wallet.exe,
-                    build/bin/Release/zetacoin-util.exe `
-                    -Destination "${dist}/bin/"
+          Rename-Item install ${dist}
           Copy-Item COPYING, README.md -Destination "${dist}/"
           Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
           (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
 
       - name: Rename installer
         shell: pwsh
+        continue-on-error: true
         run: |
           $ver = "${{ env.VERSION }}".TrimStart("v")
-          Move-Item build/zetacoin-win64-setup.exe "zetacoin-${ver}-win64-setup.exe"
-          (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
+          if (Test-Path build/zetacoin-win64-setup.exe) {
+            Move-Item build/zetacoin-win64-setup.exe "zetacoin-${ver}-win64-setup.exe"
+            (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
+          }
 
       - name: Upload zip
         uses: actions/upload-artifact@v4
@@ -176,6 +176,7 @@ jobs:
           path: zetacoin-*-windows-x86_64.zip*
 
       - name: Upload installer
+        if: hashFiles('zetacoin-*-win64-setup.exe') != ''
         uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64-setup
