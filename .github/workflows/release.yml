@@ -184,7 +184,8 @@ jobs:
 
       - name: Build NSIS installer (CPack)
         working-directory: build
-        run: cpack -G NSIS -C Release
+        run: cpack -G NSIS -C Release --verbose
+        continue-on-error: true
 
       - name: Package zip
         shell: pwsh
