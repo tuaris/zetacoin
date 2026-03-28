@@ -140,6 +140,26 @@ jobs:
       - name: Install
         run: cmake --install build --prefix install --config Release --strip
 
+      - name: Bundle DLLs
+        shell: pwsh
+        run: |
+          # Use windeployqt to bundle Qt DLLs for the GUI executable
+          $qtBinDir = (Get-ChildItem -Path "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/tools/Qt6/bin" -ErrorAction SilentlyContinue).DirectoryName
+          if (-not $qtBinDir) { $qtBinDir = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/tools/Qt6/bin" }
+          $windeployqt = Get-ChildItem -Path "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -Filter "windeployqt*" -Recurse | Select-Object -First 1
+          if ($windeployqt) {
+            & $windeployqt.FullName --release --no-translations --no-opengl-sw --no-system-dxc-compiler --dir install/bin install/bin/zetacoin-qt.exe
+          }
+          # Copy all vcpkg runtime DLLs that our binaries depend on
+          $vcpkgBin = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin"
+          if (Test-Path $vcpkgBin) {
+            Get-ChildItem "$vcpkgBin/*.dll" | ForEach-Object {
+              if (-not (Test-Path "install/bin/$($_.Name)")) {
+                Copy-Item $_.FullName -Destination install/bin/
+              }
+            }
+          }
+
       - name: Package zip
         shell: pwsh
         run: |
