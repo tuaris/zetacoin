@@ -143,22 +143,38 @@ jobs:
       - name: Bundle DLLs
         shell: pwsh
         run: |
-          # Use windeployqt to bundle Qt DLLs for the GUI executable
-          $qtBinDir = (Get-ChildItem -Path "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/tools/Qt6/bin" -ErrorAction SilentlyContinue).DirectoryName
-          if (-not $qtBinDir) { $qtBinDir = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/tools/Qt6/bin" }
-          $windeployqt = Get-ChildItem -Path "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -Filter "windeployqt*" -Recurse | Select-Object -First 1
-          if ($windeployqt) {
-            & $windeployqt.FullName --release --no-translations --no-opengl-sw --no-system-dxc-compiler --dir install/bin install/bin/zetacoin-qt.exe
+          # Find vcpkg installed dir (varies by runner: build/_deps, vcpkg_installed, or VCPKG_INSTALLATION_ROOT/installed)
+          $vcpkgDirs = @(
+            "build/vcpkg_installed/x64-windows",
+            "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows"
+          )
+          $vcpkgDir = $vcpkgDirs | Where-Object { Test-Path "$_/bin" } | Select-Object -First 1
+          if (-not $vcpkgDir) {
+            Write-Host "Searching for vcpkg installed dir..."
+            $vcpkgDir = Get-ChildItem -Path build -Filter "x64-windows" -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { Test-Path "$($_.FullName)/bin" } | Select-Object -First 1
+            if ($vcpkgDir) { $vcpkgDir = $vcpkgDir.FullName }
           }
-          # Copy all vcpkg runtime DLLs that our binaries depend on
-          $vcpkgBin = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin"
-          if (Test-Path $vcpkgBin) {
-            Get-ChildItem "$vcpkgBin/*.dll" | ForEach-Object {
+          Write-Host "vcpkg dir: $vcpkgDir"
+          # Copy vcpkg runtime DLLs
+          if ($vcpkgDir -and (Test-Path "$vcpkgDir/bin")) {
+            Get-ChildItem "$vcpkgDir/bin/*.dll" | ForEach-Object {
               if (-not (Test-Path "install/bin/$($_.Name)")) {
                 Copy-Item $_.FullName -Destination install/bin/
+                Write-Host "  Copied: $($_.Name)"
               }
             }
           }
+          # Use windeployqt to bundle Qt6 DLLs + plugins for the GUI
+          $windeployqt = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "windeployqt*" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
+          if ($windeployqt) {
+            Write-Host "Running windeployqt: $($windeployqt.FullName)"
+            & $windeployqt.FullName --release --no-translations --no-opengl-sw --no-system-dxc-compiler --dir install/bin install/bin/zetacoin-qt.exe
+          } else {
+            Write-Host "windeployqt not found, skipping Qt plugin bundling"
+          }
+          # List what we have
+          Write-Host "=== install/bin contents ==="
+          Get-ChildItem install/bin/ | ForEach-Object { Write-Host "  $($_.Name) ($($_.Length) bytes)" }
 
       - name: Package zip
         shell: pwsh
