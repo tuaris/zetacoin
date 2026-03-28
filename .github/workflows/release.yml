@@ -170,11 +170,27 @@ jobs:
             Write-Host "Running windeployqt: $($windeployqt.FullName)"
             & $windeployqt.FullName --release --no-translations --no-opengl-sw --no-system-dxc-compiler --dir install/bin install/bin/zetacoin-qt.exe
           } else {
-            Write-Host "windeployqt not found, skipping Qt plugin bundling"
+            Write-Host "windeployqt not found, copying Qt platform plugin manually"
+          }
+          # Ensure Qt platform plugin exists (required for zetacoin-qt to start)
+          if (-not (Test-Path "install/bin/platforms/qwindows.dll")) {
+            $qwindows = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "qwindows.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
+            if ($qwindows) {
+              New-Item -ItemType Directory -Path "install/bin/platforms" -Force | Out-Null
+              Copy-Item $qwindows.FullName -Destination "install/bin/platforms/"
+              Write-Host "  Copied platform plugin: $($qwindows.FullName)"
+            }
+            # Also copy styles plugin for native look
+            $qstyles = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "qwindowsvistastyle.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
+            if ($qstyles) {
+              New-Item -ItemType Directory -Path "install/bin/styles" -Force | Out-Null
+              Copy-Item $qstyles.FullName -Destination "install/bin/styles/"
+              Write-Host "  Copied styles plugin: $($qstyles.FullName)"
+            }
           }
           # List what we have
           Write-Host "=== install/bin contents ==="
-          Get-ChildItem install/bin/ | ForEach-Object { Write-Host "  $($_.Name) ($($_.Length) bytes)" }
+          Get-ChildItem install/bin/ -Recurse | ForEach-Object { Write-Host "  $($_.FullName.Replace((Get-Location).Path + '\install\bin\','')) ($($_.Length) bytes)" }
 
       - name: Package zip
         shell: pwsh
