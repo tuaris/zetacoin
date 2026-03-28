@@ -713,3 +713,60 @@ endif()
 
 # We want all build properties to be encapsulated properly.
 include(WarnAboutGlobalProperties)
+
+#=============================
+# CPack — installer packaging
+#=============================
+if(WIN32)
+  set(CPACK_GENERATOR "NSIS")
+  set(CPACK_PACKAGE_NAME "Zetacoin Core")
+  set(CPACK_PACKAGE_VENDOR "Zetacoin Core developers")
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Zetacoin Core - peer-to-peer currency")
+  set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+  set(CPACK_PACKAGE_VERSION_MAJOR "${CLIENT_VERSION_MAJOR}")
+  set(CPACK_PACKAGE_VERSION_MINOR "${CLIENT_VERSION_MINOR}")
+  set(CPACK_PACKAGE_VERSION_PATCH "${CLIENT_VERSION_BUILD}")
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY "Zetacoin")
+  set(CPACK_PACKAGE_EXECUTABLES "zetacoin-qt;Zetacoin Core")
+  set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
+  set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/share/pixmaps/zetacoin.ico")
+
+  # NSIS-specific settings
+  set(CPACK_NSIS_DISPLAY_NAME "Zetacoin Core")
+  set(CPACK_NSIS_PACKAGE_NAME "Zetacoin Core ${PROJECT_VERSION}")
+  set(CPACK_NSIS_MUI_ICON "${PROJECT_SOURCE_DIR}/share/pixmaps/zetacoin.ico")
+  set(CPACK_NSIS_MUI_UNIICON "${PROJECT_SOURCE_DIR}/share/pixmaps/zetacoin.ico")
+  set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/tuaris/zetacoin")
+  set(CPACK_NSIS_HELP_LINK "https://github.com/tuaris/zetacoin/issues")
+  set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\zetacoin-qt.exe")
+  set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+  set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+  set(CPACK_NSIS_MODIFY_PATH OFF)
+  set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
+
+  # Start menu shortcuts
+  set(CPACK_NSIS_MENU_LINKS
+    "bin/zetacoin-qt.exe" "Zetacoin Core"
+  )
+
+  # Create desktop shortcut
+  set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$DESKTOP\\\\Zetacoin Core.lnk' '$INSTDIR\\\\bin\\\\zetacoin-qt.exe'"
+  )
+  set(CPACK_NSIS_DELETE_ICONS_EXTRA
+    "Delete '$DESKTOP\\\\Zetacoin Core.lnk'"
+  )
+
+  # URL protocol handler
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+    WriteRegStr HKCR 'zetacoin' '' 'URL:Zetacoin'
+    WriteRegStr HKCR 'zetacoin' 'URL Protocol' ''
+    WriteRegStr HKCR 'zetacoin\\\\DefaultIcon' '' '$INSTDIR\\\\bin\\\\zetacoin-qt.exe'
+    WriteRegStr HKCR 'zetacoin\\\\shell\\\\open\\\\command' '' '\\\"$INSTDIR\\\\bin\\\\zetacoin-qt.exe\\\" \\\"%1\\\"'
+  ")
+  set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+    DeleteRegKey HKCR 'zetacoin'
+  ")
+
+  include(CPack)
+endif()

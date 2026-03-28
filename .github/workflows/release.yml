@@ -133,6 +133,12 @@ jobs:
           path: ~/AppData/Local/vcpkg/archives
           key: release-gui-vcpkg-${{ hashFiles('vcpkg.json') }}
 
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          choco install nsis -y
+          echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build
         working-directory: build
         run: cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
@@ -143,14 +149,13 @@ jobs:
       - name: Bundle DLLs
         shell: pwsh
         run: |
-          # Find vcpkg installed dir (varies by runner: build/_deps, vcpkg_installed, or VCPKG_INSTALLATION_ROOT/installed)
+          # Find vcpkg installed dir
           $vcpkgDirs = @(
             "build/vcpkg_installed/x64-windows",
             "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows"
           )
           $vcpkgDir = $vcpkgDirs | Where-Object { Test-Path "$_/bin" } | Select-Object -First 1
           if (-not $vcpkgDir) {
-            Write-Host "Searching for vcpkg installed dir..."
             $vcpkgDir = Get-ChildItem -Path build -Filter "x64-windows" -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { Test-Path "$($_.FullName)/bin" } | Select-Object -First 1
             if ($vcpkgDir) { $vcpkgDir = $vcpkgDir.FullName }
           }
@@ -160,37 +165,26 @@ jobs:
             Get-ChildItem "$vcpkgDir/bin/*.dll" | ForEach-Object {
               if (-not (Test-Path "install/bin/$($_.Name)")) {
                 Copy-Item $_.FullName -Destination install/bin/
-                Write-Host "  Copied: $($_.Name)"
               }
             }
           }
-          # Use windeployqt to bundle Qt6 DLLs + plugins for the GUI
-          $windeployqt = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "windeployqt*" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
-          if ($windeployqt) {
-            Write-Host "Running windeployqt: $($windeployqt.FullName)"
-            & $windeployqt.FullName --release --no-translations --no-opengl-sw --no-system-dxc-compiler --dir install/bin install/bin/zetacoin-qt.exe
-          } else {
-            Write-Host "windeployqt not found, copying Qt platform plugin manually"
-          }
-          # Ensure Qt platform plugin exists (required for zetacoin-qt to start)
-          if (-not (Test-Path "install/bin/platforms/qwindows.dll")) {
-            $qwindows = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "qwindows.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
+          # Copy Qt platform + styles plugins
+          if ($vcpkgDir) {
+            $qwindows = Get-ChildItem -Path $vcpkgDir -Filter "qwindows.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($qwindows) {
               New-Item -ItemType Directory -Path "install/bin/platforms" -Force | Out-Null
               Copy-Item $qwindows.FullName -Destination "install/bin/platforms/"
-              Write-Host "  Copied platform plugin: $($qwindows.FullName)"
             }
-            # Also copy styles plugin for native look
-            $qstyles = if ($vcpkgDir) { Get-ChildItem -Path $vcpkgDir -Filter "qwindowsvistastyle.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 }
+            $qstyles = Get-ChildItem -Path $vcpkgDir -Filter "qwindowsvistastyle.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($qstyles) {
               New-Item -ItemType Directory -Path "install/bin/styles" -Force | Out-Null
               Copy-Item $qstyles.FullName -Destination "install/bin/styles/"
-              Write-Host "  Copied styles plugin: $($qstyles.FullName)"
             }
           }
-          # List what we have
-          Write-Host "=== install/bin contents ==="
-          Get-ChildItem install/bin/ -Recurse | ForEach-Object { Write-Host "  $($_.FullName.Replace((Get-Location).Path + '\install\bin\','')) ($($_.Length) bytes)" }
+
+      - name: Build NSIS installer (CPack)
+        working-directory: build
+        run: cpack -G NSIS -C Release
 
       - name: Package zip
         shell: pwsh
@@ -202,11 +196,29 @@ jobs:
           Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
           (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
 
+      - name: Package installer
+        shell: pwsh
+        run: |
+          $ver = "${{ env.VERSION }}".TrimStart("v")
+          $installer = Get-ChildItem build -Filter "Zetacoin*.exe" | Select-Object -First 1
+          if ($installer) {
+            Move-Item $installer.FullName "zetacoin-${ver}-win64-setup.exe"
+            (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
+          }
+
       - name: Upload zip
         uses: actions/upload-artifact@v4
         with:
-          name: windows-x86_64
+          name: windows-x86_64-zip
           path: zetacoin-*-windows-x86_64.zip*
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        if: hashFiles('zetacoin-*-win64-setup.exe') != ''
+        continue-on-error: true
+        with:
+          name: windows-x86_64-setup
+          path: zetacoin-*-win64-setup.exe*
 
   release:
     name: 'Create GitHub Release'
