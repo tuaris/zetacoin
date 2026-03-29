@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Black circle background -->
+  <circle cx="256" cy="256" r="256" fill="#1a1a1a"/>
+  <!-- Subtle dark ring for depth -->
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#333333" stroke-width="2"/>
+  <!-- Zeta (ζ) symbol in white - stylized to match the original Zetacoin logo -->
+  <g transform="translate(256, 256) scale(1.0)" fill="white">
+    <!-- Main zeta curve - flowing S-like shape -->
+    <path d="
+      M -60,-140
+      C -40,-145 20,-140 60,-130
+      C 80,-125 90,-115 85,-105
+      L -30,-10
+      C -50,15 -55,45 -45,70
+      C -35,95 -15,115 10,130
+      C 25,140 30,145 25,155
+      C 20,165 5,165 -10,160
+      C -35,150 -50,130 -55,110
+    " fill="none" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Top decorative curl -->
+    <path d="
+      M -60,-140
+      C -75,-130 -80,-115 -70,-105
+      C -60,-95 -45,-100 -40,-110
+    " fill="none" stroke="white" stroke-width="24" stroke-linecap="round"/>
+    <!-- Top horizontal bar -->
+    <path d="
+      M -55,-130
+      L 75,-130
+    " fill="none" stroke="white" stroke-width="28" stroke-linecap="round"/>
+    <!-- Diagonal stroke -->
+    <path d="
+      M 70,-125
+      L -45,65
+    " fill="none" stroke="white" stroke-width="28" stroke-linecap="round"/>
+    <!-- Bottom tail curl -->
+    <path d="
+      M -45,65
+      C -55,90 -45,115 -20,130
+      C 0,142 15,148 10,158
+      C 5,168 -15,162 -30,150
+    " fill="none" stroke="white" stroke-width="24" stroke-linecap="round"/>
+  </g>
+</svg>
