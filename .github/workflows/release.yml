@@ -126,7 +126,7 @@ jobs:
           cmake -B build \
             -DCMAKE_TOOLCHAIN_FILE=$(pwd)/depends/x86_64-w64-mingw32/toolchain.cmake \
             -DBUILD_GUI=ON \
-            -DBUILD_TESTS=OFF \
+            -DBUILD_TESTS=ON \
             -DBUILD_BENCH=OFF \
             -DCMAKE_BUILD_TYPE=Release
 
@@ -142,18 +142,17 @@ jobs:
         run: |
           DIST=zetacoin-${VERSION#v}-windows-x86_64
           mkdir -p ${DIST}
-          cp build/src/zetacoin-qt.exe build/src/zetacoind.exe build/src/zetacoin-cli.exe \
-             build/src/zetacoin-tx.exe build/src/zetacoin-wallet.exe build/src/zetacoin-util.exe \
-             build/src/zetacoin.exe ${DIST}/ 2>/dev/null || true
-          # Fallback: find all .exe files
-          find build -name "*.exe" -not -path "*/test*" | head -20
+          cp build/bin/zetacoin.exe build/bin/zetacoin-qt.exe \
+             build/bin/zetacoind.exe build/bin/zetacoin-cli.exe \
+             build/bin/zetacoin-tx.exe build/bin/zetacoin-wallet.exe \
+             build/bin/zetacoin-util.exe ${DIST}/ 2>/dev/null || true
           cp COPYING README.md ${DIST}/
           zip -r ${DIST}.zip ${DIST}
           sha256sum ${DIST}.zip > ${DIST}.zip.sha256
 
       - name: Package installer
         run: |
-          INSTALLER=$(find build -name "zetacoin-*-setup.exe" -o -name "zetacoin-win64-setup.exe" 2>/dev/null | head -1)
+          INSTALLER=$(find build -name "zetacoin-win64-setup.exe" 2>/dev/null | head -1)
           if [ -n "$INSTALLER" ]; then
             VER=${VERSION#v}
             cp "$INSTALLER" "zetacoin-${VER}-win64-setup.exe"
