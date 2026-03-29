@@ -35,4 +35,4 @@ jobs:
         run: cmake --build build -j$(nproc)
 
       - name: Run validation tests
-        run: build/bin/test_bitcoin --run_test=validation_tests
+        run: build/bin/test_zetacoin --run_test=validation_tests
