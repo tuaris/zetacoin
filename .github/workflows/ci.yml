@@ -34,5 +34,5 @@ jobs:
       - name: Build
         run: cmake --build build -j$(nproc)
 
-      - name: Run validation tests
-        run: build/bin/test_zetacoin --run_test=validation_tests
+      - name: Run unit tests
+        run: build/bin/test_zetacoin --log_level=test_suite --catch_system_error=no -- DEBUG_LOG_OUT
