@@ -45,4 +45,5 @@ if(WIN32 AND VCPKG_TARGET_TRIPLET)
   )
 endif()
 
+set_target_properties(test_bitcoin-qt PROPERTIES OUTPUT_NAME test_zetacoin-qt)
 install_binary_component(test_bitcoin-qt INTERNAL)

@@ -86,4 +86,5 @@ add_test(NAME bench_sanity_check
   COMMAND bench_bitcoin -sanity-check
 )
 
+set_target_properties(bench_bitcoin PROPERTIES OUTPUT_NAME bench_zetacoin)
 install_binary_component(bench_bitcoin INTERNAL)
