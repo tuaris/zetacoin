@@ -92,120 +92,73 @@ jobs:
           path: zetacoin-*-macos-arm64.tar.gz*
 
   windows:
-    name: 'Windows x86_64'
-    runs-on: windows-2022
-    timeout-minutes: 120
+    name: 'Windows x86_64 (cross-compiled)'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
 
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configure Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Configure vcpkg
-        shell: bash
+      - name: Install cross-compilation toolchain
         run: |
-          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
-          sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
+          sudo apt-get update
+          sudo apt-get install -y g++-mingw-w64-x86-64-posix nsis zip
 
-      - name: Restore vcpkg cache
+      - name: Restore depends cache
         uses: actions/cache/restore@v4
-        id: vcpkg-cache
+        id: depends-cache
         with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: release-gui-vcpkg-${{ hashFiles('vcpkg.json') }}
+          path: depends/built
+          key: depends-mingw-${{ hashFiles('depends/packages/*.mk') }}
+
+      - name: Build dependencies
+        run: make -C depends HOST=x86_64-w64-mingw32 -j$(nproc)
+
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        with:
+          path: depends/built
+          key: depends-mingw-${{ hashFiles('depends/packages/*.mk') }}
 
       - name: Configure
         run: |
-          cmake -B build --preset vs2022 `
-            -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
-            -DBUILD_GUI=ON `
-            -DBUILD_TESTS=OFF `
-            -DBUILD_BENCH=OFF `
-            -DENABLE_IPC=OFF
-
-      - name: Save vcpkg cache
-        uses: actions/cache/save@v4
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        with:
-          path: ~/AppData/Local/vcpkg/archives
-          key: release-gui-vcpkg-${{ hashFiles('vcpkg.json') }}
-
-      - name: Install NSIS
-        shell: pwsh
-        run: |
-          choco install nsis -y
-          echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          cmake -B build \
+            -DCMAKE_TOOLCHAIN_FILE=$(pwd)/depends/x86_64-w64-mingw32/toolchain.cmake \
+            -DBUILD_GUI=ON \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_BENCH=OFF \
+            -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Build NSIS installer
         working-directory: build
-        run: cmake --build . -j $env:NUMBER_OF_PROCESSORS --config Release
-
-      - name: Install
-        run: cmake --install build --prefix install --config Release --strip
-
-      - name: Bundle DLLs
-        shell: pwsh
-        run: |
-          # Find vcpkg installed dir
-          $vcpkgDirs = @(
-            "build/vcpkg_installed/x64-windows",
-            "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows"
-          )
-          $vcpkgDir = $vcpkgDirs | Where-Object { Test-Path "$_/bin" } | Select-Object -First 1
-          if (-not $vcpkgDir) {
-            $vcpkgDir = Get-ChildItem -Path build -Filter "x64-windows" -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { Test-Path "$($_.FullName)/bin" } | Select-Object -First 1
-            if ($vcpkgDir) { $vcpkgDir = $vcpkgDir.FullName }
-          }
-          Write-Host "vcpkg dir: $vcpkgDir"
-          # Copy vcpkg runtime DLLs
-          if ($vcpkgDir -and (Test-Path "$vcpkgDir/bin")) {
-            Get-ChildItem "$vcpkgDir/bin/*.dll" | ForEach-Object {
-              if (-not (Test-Path "install/bin/$($_.Name)")) {
-                Copy-Item $_.FullName -Destination install/bin/
-              }
-            }
-          }
-          # Copy Qt platform + styles plugins
-          if ($vcpkgDir) {
-            $qwindows = Get-ChildItem -Path $vcpkgDir -Filter "qwindows.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($qwindows) {
-              New-Item -ItemType Directory -Path "install/bin/platforms" -Force | Out-Null
-              Copy-Item $qwindows.FullName -Destination "install/bin/platforms/"
-            }
-            $qstyles = Get-ChildItem -Path $vcpkgDir -Filter "qwindowsvistastyle.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($qstyles) {
-              New-Item -ItemType Directory -Path "install/bin/styles" -Force | Out-Null
-              Copy-Item $qstyles.FullName -Destination "install/bin/styles/"
-            }
-          }
-
-      - name: Build NSIS installer (CPack)
-        working-directory: build
-        run: cpack -G NSIS -C Release --verbose
+        run: cmake --build . --target deploy
         continue-on-error: true
 
       - name: Package zip
-        shell: pwsh
         run: |
-          $ver = "${{ env.VERSION }}".TrimStart("v")
-          $dist = "zetacoin-${ver}-windows-x86_64"
-          Rename-Item install ${dist}
-          Copy-Item COPYING, README.md -Destination "${dist}/"
-          Compress-Archive -Path ${dist} -DestinationPath "${dist}.zip"
-          (Get-FileHash "${dist}.zip" -Algorithm SHA256).Hash.ToLower() + "  ${dist}.zip" | Out-File "${dist}.zip.sha256" -Encoding ascii
+          DIST=zetacoin-${VERSION#v}-windows-x86_64
+          mkdir -p ${DIST}
+          cp build/src/zetacoin-qt.exe build/src/zetacoind.exe build/src/zetacoin-cli.exe \
+             build/src/zetacoin-tx.exe build/src/zetacoin-wallet.exe build/src/zetacoin-util.exe \
+             build/src/zetacoin.exe ${DIST}/ 2>/dev/null || true
+          # Fallback: find all .exe files
+          find build -name "*.exe" -not -path "*/test*" | head -20
+          cp COPYING README.md ${DIST}/
+          zip -r ${DIST}.zip ${DIST}
+          sha256sum ${DIST}.zip > ${DIST}.zip.sha256
 
       - name: Package installer
-        shell: pwsh
         run: |
-          $ver = "${{ env.VERSION }}".TrimStart("v")
-          $installer = Get-ChildItem build -Filter "Zetacoin*.exe" | Select-Object -First 1
-          if ($installer) {
-            Move-Item $installer.FullName "zetacoin-${ver}-win64-setup.exe"
-            (Get-FileHash "zetacoin-${ver}-win64-setup.exe" -Algorithm SHA256).Hash.ToLower() + "  zetacoin-${ver}-win64-setup.exe" | Out-File "zetacoin-${ver}-win64-setup.exe.sha256" -Encoding ascii
-          }
+          INSTALLER=$(find build -name "zetacoin-*-setup.exe" -o -name "zetacoin-win64-setup.exe" 2>/dev/null | head -1)
+          if [ -n "$INSTALLER" ]; then
+            VER=${VERSION#v}
+            cp "$INSTALLER" "zetacoin-${VER}-win64-setup.exe"
+            sha256sum "zetacoin-${VER}-win64-setup.exe" > "zetacoin-${VER}-win64-setup.exe.sha256"
+          fi
 
       - name: Upload zip
         uses: actions/upload-artifact@v4
@@ -215,11 +168,11 @@ jobs:
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
-        if: hashFiles('zetacoin-*-win64-setup.exe') != ''
         continue-on-error: true
         with:
           name: windows-x86_64-setup
           path: zetacoin-*-win64-setup.exe*
+          if-no-files-found: ignore
 
   release:
     name: 'Create GitHub Release'
