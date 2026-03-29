@@ -380,10 +380,9 @@ TestChain100Setup::TestChain100Setup(
 
     {
         LOCK(::cs_main);
-        assert(m_node.chainman->ActiveChain().Height() == COINBASE_MATURITY);
-        // Log the chain tip hash so we can hardcode it for regression testing
-        std::string tip_hash = m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString();
-        LogInfo("TestChain100Setup: regtest chain tip after %d blocks: %s\n", COINBASE_MATURITY, tip_hash);
+        assert(
+            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+            "54923618ad98af4ca584555fc2fb39145807e54fbd4a019994733a54c28189c5");
     }
 }
 
