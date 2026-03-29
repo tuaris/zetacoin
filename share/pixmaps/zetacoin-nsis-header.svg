@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="528mm"
+   height="200mm"
+   viewBox="0 0 528 200"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="ZetaCoin Logo - Installer Header.svg"
+   inkscape:export-filename="zetacoin-nsis-header.png"
+   inkscape:export-xdpi="7.215909"
+   inkscape:export-ydpi="7.215909"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.5190608"
+     inkscape:cx="1283.0867"
+     inkscape:cy="656.9558"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1927"
+     inkscape:window-y="2152"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:export-bgcolor="#ffffffff" />
+  <defs
+     id="defs1">
+    <rect
+       x="1029.8846"
+       y="102.17109"
+       width="845.97662"
+       height="217.965"
+       id="rect2" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(16.488071,-57.592557)">
+    <g
+       id="g1">
+      <text
+         xml:space="preserve"
+         style="font-size:78.7205px;line-height:0.9;font-family:'Sackers Gothic Medium';-inkscape-font-specification:'Sackers Gothic Medium, Normal';text-align:center;letter-spacing:0.491475px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#808080;stroke-width:0.410003"
+         x="236.076"
+         y="160.17941"
+         id="text1"
+         transform="scale(0.88504128,1.1298908)"><tspan
+           sodipodi:role="line"
+           id="tspan1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:78.7205px;font-family:'Engravers\' Gothic';-inkscape-font-specification:'Engravers\' Gothic, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0.491475px;stroke-width:0.410003"
+           x="236.32175"
+           y="160.17941">Zetacoin</tspan></text>
+      <g
+         id="g2"
+         transform="matrix(0.2827943,0,0,0.2827943,-41.583533,121.30357)">
+        <circle
+           cx="249.76668"
+           cy="128.32292"
+           r="135.46667"
+           fill="#1a1a1a"
+           id="circle1"
+           style="stroke-width:0.529167" />
+        <circle
+           cx="249.76668"
+           cy="128.32292"
+           r="121.70834"
+           fill="none"
+           stroke="#333333"
+           stroke-width="1.05833"
+           id="circle2" />
+        <path
+           fill="rgb(0,0,0)"
+           d="m 235.42056,26.086204 c 2.57056,-0.348192 4.03517,1.03677 2.22846,3.366823 -0.75076,0.968111 -2.40692,1.743472 -3.46499,2.407444 -0.80023,0.507074 -1.56461,1.06852 -2.28772,1.680501 -1.6203,1.358635 -2.95605,3.024188 -3.93065,4.900877 -1.36988,2.684066 -1.68129,5.518283 -0.73752,8.409517 1.57678,4.830366 6.42025,7.166637 10.63612,9.293622 8.89939,-7.914084 22.06506,-21.217335 33.81256,-23.911455 2.80458,-0.643069 5.99413,-0.655637 8.49048,0.957528 1.57956,1.020894 2.62863,2.442898 2.9792,4.310856 0.55695,2.979076 -0.5662,5.992416 -2.2688,8.40105 -6.09732,8.629783 -18.05517,12.799616 -27.95852,14.984413 -2.02274,0.446088 -4.08384,0.674026 -6.11849,1.049205 -3.49554,0.644393 -10.10655,10.384764 -12.24611,13.501159 -9.96738,14.548512 -15.99737,31.430386 -17.50271,49.001626 -0.38577,4.87839 -0.47678,9.61708 0.40679,14.45102 2.33006,12.74894 11.67316,24.45808 25.63469,23.70799 11.51387,-0.61913 25.60029,-0.85725 35.48909,5.95973 6.12775,4.26377 10.29494,10.80162 11.57552,18.15571 1.84415,10.16794 -0.99218,20.828 -6.82757,29.25101 -4.45691,6.35794 -11.90757,10.79104 -19.35692,12.63254 -7.07628,1.74757 -15.41727,1.26338 -21.76264,-2.60747 -2.27515,-1.38774 -4.11692,-3.32846 -4.72374,-5.98752 -0.52863,-2.31511 -0.25334,-4.9874 1.05331,-7.00485 1.18414,-1.82959 3.12962,-3.20807 5.13622,-3.99785 10.33529,-4.07194 17.70923,5.09058 25.76711,3.36021 3.66581,-0.78714 6.95987,-3.52954 8.96276,-6.62782 2.22118,-3.43826 3.3708,-7.87267 2.4765,-11.9208 -0.4736,-2.159 -1.5187,-4.15131 -3.02815,-5.76659 -5.15541,-5.44248 -14.95558,-4.85378 -21.82151,-4.26244 -11.7897,1.01468 -20.89296,0.85064 -31.23169,-5.89359 -9.27483,-6.05235 -14.07054,-13.6578 -16.44345,-24.51365 -1.77681,-8.46005 -2.4392,-17.11722 -1.97036,-25.75057 0.87882,-19.17383 6.01491,-32.903985 15.59613,-49.569295 3.24393,-5.642505 6.74304,-10.601326 10.22853,-16.023961 -4.35941,-1.43973 -7.51985,-2.480998 -11.47895,-4.890956 -7.34166,-4.297891 -8.46494,-13.530395 -3.97364,-20.35003 3.94176,-5.98514 11.83984,-9.233033 18.66066,-10.703984 z"
+           id="path2"
+           style="display:block;fill:#ffffff;stroke-width:0.132292" />
+      </g>
+      <text
+         xml:space="preserve"
+         transform="matrix(0.29501843,0,0,0.29501843,-8.6672686,109.28443)"
+         id="text2"
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:192px;line-height:0.9;font-family:Cinzel;-inkscape-font-specification:'Cinzel, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-6.14149px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2);display:inline;fill:#808080"><tspan
+           x="1180.2292"
+           y="245.03783"
+           id="tspan3"><tspan
+             style="font-style:italic;font-weight:600;font-family:Montserrat;-inkscape-font-specification:'Montserrat, Semi-Bold Italic';fill:#1a1a1a"
+             id="tspan2">CORE</tspan></tspan></text>
+    </g>
+  </g>
+</svg>
