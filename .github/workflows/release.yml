@@ -56,9 +56,16 @@ jobs:
           path: zetacoin-*-linux-x86_64.tar.gz*
 
   macos:
-    name: 'macOS ARM64'
-    runs-on: macos-14
+    name: 'macOS ${{ matrix.arch }}'
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-14
+          - arch: x86_64
+            runner: macos-13
 
     steps:
       - uses: actions/checkout@v5
@@ -74,22 +81,52 @@ jobs:
       - name: Build
         run: cmake --build build -j$(sysctl -n hw.ncpu)
 
-      - name: Install
-        run: cmake --install build --prefix install --strip
+      - name: Create app bundle
+        working-directory: build
+        run: cmake --build . --target deploy
 
-      - name: Package
+      - name: Create DMG
+        working-directory: build
         run: |
-          DIST=zetacoin-${VERSION#v}-macos-arm64
-          mv install ${DIST}
+          VOLNAME="Zetacoin-Core"
+          DMG_NAME="zetacoin-${VERSION#v}-macos-${{ matrix.arch }}.dmg"
+          # Find the .app bundle in dist/ (cross-compile path) or current dir (native path)
+          if [ -d "dist/${VOLNAME}.app" ] || [ -d "dist/Zetacoin-Qt.app" ]; then
+            APP_DIR="dist"
+          else
+            APP_DIR="."
+          fi
+          # Create a temporary DMG staging directory
+          mkdir -p dmg_staging
+          cp -R "${APP_DIR}/Zetacoin-Qt.app" dmg_staging/
+          cp "${GITHUB_WORKSPACE}/COPYING" dmg_staging/LICENSE.txt
+          # Create symlink to /Applications for drag-and-drop install
+          ln -s /Applications dmg_staging/Applications
+          # Create the DMG
+          hdiutil create -volname "${VOLNAME}" -srcfolder dmg_staging -ov -format UDZO "${DMG_NAME}"
+          shasum -a 256 "${DMG_NAME}" > "${DMG_NAME}.sha256"
+
+      - name: Also package as tarball
+        working-directory: build
+        run: |
+          DIST=zetacoin-${VERSION#v}-macos-${{ matrix.arch }}
+          cmake --install "${GITHUB_WORKSPACE}/build" --prefix "${GITHUB_WORKSPACE}/${DIST}" --strip
+          cd "${GITHUB_WORKSPACE}"
           cp COPYING README.md ${DIST}/
           tar czf ${DIST}.tar.gz ${DIST}
           shasum -a 256 ${DIST}.tar.gz > ${DIST}.tar.gz.sha256
 
-      - name: Upload artifact
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: macos-arm64
-          path: zetacoin-*-macos-arm64.tar.gz*
+          name: macos-${{ matrix.arch }}-dmg
+          path: build/zetacoin-*-macos-${{ matrix.arch }}.dmg*
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-tarball
+          path: zetacoin-*-macos-${{ matrix.arch }}.tar.gz*
 
   windows:
     name: 'Windows x86_64 (cross-compiled)'
