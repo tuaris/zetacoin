@@ -19,7 +19,7 @@ env:
 jobs:
   freebsd:
     name: 'FreeBSD amd64 (static, 13.5 jail)'
-    runs-on: FreeBSD:host
+    runs-on: FreeBSD
 
     steps:
       - name: Checkout source
