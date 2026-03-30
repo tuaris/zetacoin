@@ -118,7 +118,7 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           API="${{ github.server_url }}/api/v1"
-          TOKEN="${{ secrets.FORGEJO_TOKEN }}"
+          TOKEN="${{ secrets.FORGEJO_TOKEN || github.token }}"
           REPO="${{ github.repository }}"
 
           # Get or create release for this tag
