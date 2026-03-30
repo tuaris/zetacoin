@@ -34,6 +34,7 @@ jobs:
           version: ${{ env.FREEBSD_VERSION }}
           jail_name: ${{ env.JAIL_NAME }}
           packages: 'git cmake pkgconf gmake bash curl'
+          zfs_parent: 'Storage/jails'
 
       - name: Prepare jail workspace
         run: |
@@ -114,3 +115,4 @@ jobs:
         uses: https://pacyworld.dev/pacyworld/freebsd-build-action/teardown@master
         with:
           jail_name: ${{ env.JAIL_NAME }}
+          zfs_parent: 'Storage/jails'
