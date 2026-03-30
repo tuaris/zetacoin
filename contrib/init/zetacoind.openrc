@@ -1,0 +1,93 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/zetacoin/.zetacoin" ]; then
+	ZETACOIND_DEFAULT_DATADIR="/var/lib/zetacoin/.zetacoin"
+else
+	ZETACOIND_DEFAULT_DATADIR="/var/lib/zetacoind"
+fi
+
+ZETACOIND_CONFIGFILE=${ZETACOIND_CONFIGFILE:-/etc/zetacoin/zetacoin.conf}
+ZETACOIND_PIDDIR=${ZETACOIND_PIDDIR:-/var/run/zetacoind}
+ZETACOIND_PIDFILE=${ZETACOIND_PIDFILE:-${ZETACOIND_PIDDIR}/zetacoind.pid}
+ZETACOIND_DATADIR=${ZETACOIND_DATADIR:-${ZETACOIND_DEFAULT_DATADIR}}
+ZETACOIND_USER=${ZETACOIND_USER:-${ZETACOIN_USER:-zetacoin}}
+ZETACOIND_GROUP=${ZETACOIND_GROUP:-zetacoin}
+ZETACOIND_BIN=${ZETACOIND_BIN:-/usr/bin/zetacoind}
+ZETACOIND_NICE=${ZETACOIND_NICE:-${NICELEVEL:-0}}
+ZETACOIND_OPTS="${ZETACOIND_OPTS:-${ZETACOIN_OPTS}}"
+
+name="Zetacoin Core Daemon"
+description="Zetacoin cryptocurrency P2P network daemon"
+
+command="/usr/bin/zetacoind"
+command_args="-pid=\"${ZETACOIND_PIDFILE}\" \
+		-conf=\"${ZETACOIND_CONFIGFILE}\" \
+		-datadir=\"${ZETACOIND_DATADIR}\" \
+		-daemon \
+		${ZETACOIND_OPTS}"
+
+required_files="${ZETACOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${ZETACOIND_USER} \
+			-N ${ZETACOIND_NICE} -w 2000"
+pidfile="${ZETACOIND_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${ZETACOIND_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${ZETACOIND_USER}:${ZETACOIND_GROUP}" \
+	"${ZETACOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${ZETACOIND_USER}:${ZETACOIND_GROUP}" \
+	"${ZETACOIND_PIDDIR}"
+
+	checkpath -f \
+	-o "${ZETACOIND_USER}:${ZETACOIND_GROUP}" \
+	-m 0660 \
+	"${ZETACOIND_CONFIGFILE}"
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if grep -qs '^rpcuser=' "${ZETACOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${ZETACOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run zetacoind."
+		eerror "The setting must appear in ${ZETACOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"Zetacoin Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

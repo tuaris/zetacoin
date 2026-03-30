@@ -1,0 +1,33 @@
+# /etc/conf.d/zetacoind: config file for /etc/init.d/zetacoind
+
+# Config file location
+#ZETACOIND_CONFIGFILE="/etc/zetacoin/zetacoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $ZETACOIND_USER)
+#ZETACOIND_PIDDIR="/var/run/zetacoind"
+
+# What filename to give the pidfile
+#ZETACOIND_PIDFILE="${ZETACOIND_PIDDIR}/zetacoind.pid"
+
+# Where to write zetacoind data (be mindful that the blockchain is large)
+#ZETACOIND_DATADIR="/var/lib/zetacoind"
+
+# User and group to own zetacoind process
+#ZETACOIND_USER="zetacoin"
+#ZETACOIND_GROUP="zetacoin"
+
+# Path to zetacoind executable
+#ZETACOIND_BIN="/usr/bin/zetacoind"
+
+# Nice value to run zetacoind under
+#ZETACOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#ZETACOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for zetacoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+ZETACOIND_SIGTERM_TIMEOUT=600

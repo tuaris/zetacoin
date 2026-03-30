@@ -1,11 +1,12 @@
 Sample configuration files for:
 ```
-systemd: bitcoind.service
-Upstart: bitcoind.conf
-OpenRC:  bitcoind.openrc
-         bitcoind.openrcconf
-CentOS:  bitcoind.init
-macOS:   org.bitcoin.bitcoind.plist
+systemd: zetacoind.service
+Upstart: zetacoind.conf
+OpenRC:  zetacoind.openrc
+         zetacoind.openrcconf
+CentOS:  zetacoind.init
+FreeBSD: zetacoind.freebsd
+macOS:   org.zetacoin.zetacoind.plist
 ```
 have been made available to assist packagers in creating node packages here.
 
