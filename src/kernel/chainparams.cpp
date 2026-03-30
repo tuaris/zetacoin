@@ -100,11 +100,15 @@ public:
         consensus.CSVHeight = 9213120;
         // SegWit (BIP141/143/147) activated via BIP9 signaling (bit 1).
         // LOCKED_IN at retarget boundary ~9,462,080; ACTIVE at ~9,482,240.
-        // SegWit was a BIP9 deployment on Zetacoin v0.13 (bit 1, startTime=Sep 2018, timeout=Sep 2020).
-        // Activation status needs verification from the old chain. Set to future height to avoid
-        // rejecting existing blocks. TODO: Determine actual activation height or confirm never activated.
-        consensus.SegwitHeight = 999999999;
-        consensus.MinBIP9WarningHeight = 9502400; // segwit activation + miner confirmation window
+        // The nodeStratum mining pool included witness commitment OP_RETURN outputs
+        // in coinbase transactions from the BIP9 activation height, but did NOT
+        // include the required 32-byte witness nonce until height 9,495,361.
+        // Blocks 9,482,240–9,495,358 have malformed commitments that fail
+        // CheckWitnessMalleation ("bad-witness-nonce-size"). No actual SegWit
+        // transactions exist in this range. Enforcement begins after the last
+        // broken block. See doc/SEGWIT.md for full analysis.
+        consensus.SegwitHeight = 9495359;
+        consensus.MinBIP9WarningHeight = 9515519; // segwit enforcement height + miner confirmation window
         consensus.powLimit = uint256{"00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 2 * 60; // two minutes
         consensus.nPowTargetSpacing = 30; // 30 seconds
