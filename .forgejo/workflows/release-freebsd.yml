@@ -25,7 +25,7 @@ jobs:
       - name: Checkout source
         run: |
           rm -rf zetacoin
-          git clone --depth 1 --branch ${{ gitea.ref_name }} ${{ gitea.server_url }}/${{ gitea.repository }}.git zetacoin
+          git clone --depth 1 --branch ${{ github.ref_name }} ${{ github.server_url }}/${{ github.repository }}.git zetacoin
 
       - name: Provision FreeBSD 13.5 build jail
         id: jail
@@ -91,7 +91,7 @@ jobs:
       - name: Package
         run: |
           JAILPATH="${{ steps.jail.outputs.jail_path }}"
-          VERSION=${{ gitea.ref_name }}
+          VERSION=${{ github.ref_name }}
           DIST="zetacoin-${VERSION#v}-freebsd-amd64-static"
 
           mkdir -p "${DIST}"
