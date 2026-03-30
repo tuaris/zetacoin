@@ -3,19 +3,18 @@
 # for maximum compatibility (runs on 13.5+, 14.x, 15.x).
 #
 # The runner (runner01.pacyworld.com) runs FreeBSD 15.0 in host mode.
-# We use a FreeBSD 13.5 jail for the actual build to get the oldest
-# OSREL ELF note, ensuring forward compatibility with all supported versions.
-#
-# Prerequisites on the runner host:
-#   - Jail "zetacoin-build-135" with FreeBSD 13.5-RELEASE base
-#   - Jail must have: git, cmake, pkgconf, gmake, bash, curl installed
-#   - Runner user (act_runner) must have doas access to jexec
+# An ephemeral FreeBSD 13.5 jail is provisioned via the freebsd-build-action
+# to get the oldest OSREL ELF note, ensuring forward compatibility.
 
 name: FreeBSD Release
 on:
   push:
     tags:
       - 'v*'
+
+env:
+  FREEBSD_VERSION: '13.5'
+  JAIL_NAME: 'zetacoin-build-135'
 
 jobs:
   freebsd:
@@ -25,39 +24,41 @@ jobs:
     steps:
       - name: Checkout source
         run: |
-          # actions/checkout requires Node.js — use raw git clone on bare FreeBSD
           rm -rf zetacoin
           git clone --depth 1 --branch ${{ gitea.ref_name }} ${{ gitea.server_url }}/${{ gitea.repository }}.git zetacoin
 
+      - name: Provision FreeBSD 13.5 build jail
+        id: jail
+        uses: pacyworld/freebsd-build-action@v1
+        with:
+          version: ${{ env.FREEBSD_VERSION }}
+          jail_name: ${{ env.JAIL_NAME }}
+          packages: 'git cmake pkgconf gmake bash curl'
+
       - name: Prepare jail workspace
         run: |
-          JAIL=zetacoin-build-135
-          JAILROOT=$(doas jls -j ${JAIL} path 2>/dev/null || echo "/usr/local/jails/${JAIL}")
-          BUILDDIR="${JAILROOT}/tmp/zetacoin-build"
-
-          # Clean previous build
+          JAILPATH="${{ steps.jail.outputs.jail_path }}"
+          BUILDDIR="${JAILPATH}/tmp/zetacoin-build"
           doas rm -rf "${BUILDDIR}"
           doas mkdir -p "${BUILDDIR}"
-
-          # Copy source into jail
           doas cp -R zetacoin/ "${BUILDDIR}/src"
           doas chown -R root:wheel "${BUILDDIR}"
 
       - name: Build dependencies (static)
         run: |
-          JAIL=zetacoin-build-135
-          doas jexec ${JAIL} sh -c '
+          doas jexec ${{ env.JAIL_NAME }} sh -c '
             cd /tmp/zetacoin-build/src/depends
             gmake -j$(sysctl -n hw.ncpu) NO_QT=1 NO_QR=1 NO_IPC=1
           '
 
       - name: Configure
         run: |
-          JAIL=zetacoin-build-135
-          doas jexec ${JAIL} sh -c '
+          doas jexec ${{ env.JAIL_NAME }} sh -c '
             cd /tmp/zetacoin-build
+            # Detect the depends toolchain path
+            TOOLCHAIN=$(ls -d /tmp/zetacoin-build/src/depends/x86_64-unknown-freebsd*/toolchain.cmake 2>/dev/null | head -1)
             cmake -S src -B build \
-              -DCMAKE_TOOLCHAIN_FILE=/tmp/zetacoin-build/src/depends/x86_64-unknown-freebsd13/toolchain.cmake \
+              -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN}" \
               -DBUILD_DAEMON=ON \
               -DBUILD_CLI=ON \
               -DBUILD_GUI=OFF \
@@ -74,31 +75,28 @@ jobs:
 
       - name: Build
         run: |
-          JAIL=zetacoin-build-135
-          doas jexec ${JAIL} sh -c '
+          doas jexec ${{ env.JAIL_NAME }} sh -c '
             cd /tmp/zetacoin-build
             cmake --build build -j$(sysctl -n hw.ncpu)
           '
 
       - name: Verify static linkage
         run: |
-          JAIL=zetacoin-build-135
-          JAILROOT=$(doas jls -j ${JAIL} path)
+          JAILPATH="${{ steps.jail.outputs.jail_path }}"
           echo "=== File type ==="
-          file "${JAILROOT}/tmp/zetacoin-build/build/bin/zetacoind"
+          file "${JAILPATH}/tmp/zetacoin-build/build/bin/zetacoind"
           echo "=== Dynamic dependencies ==="
-          ldd "${JAILROOT}/tmp/zetacoin-build/build/bin/zetacoind" 2>&1 || echo "(none — statically linked)"
+          ldd "${JAILPATH}/tmp/zetacoin-build/build/bin/zetacoind" 2>&1 || echo "(none — statically linked)"
 
       - name: Package
         run: |
-          JAIL=zetacoin-build-135
-          JAILROOT=$(doas jls -j ${JAIL} path)
+          JAILPATH="${{ steps.jail.outputs.jail_path }}"
           VERSION=${{ gitea.ref_name }}
           DIST="zetacoin-${VERSION#v}-freebsd-amd64-static"
 
           mkdir -p "${DIST}"
           for bin in zetacoind zetacoin-cli; do
-            cp "${JAILROOT}/tmp/zetacoin-build/build/bin/${bin}" "${DIST}/"
+            cp "${JAILPATH}/tmp/zetacoin-build/build/bin/${bin}" "${DIST}/"
             strip "${DIST}/${bin}"
           done
           cp zetacoin/COPYING zetacoin/README.md "${DIST}/"
@@ -111,9 +109,8 @@ jobs:
           echo "=== SHA256 ==="
           cat "${DIST}.tar.gz.sha256"
 
-      - name: Clean up jail workspace
+      - name: Tear down jail
         if: always()
-        run: |
-          JAIL=zetacoin-build-135
-          JAILROOT=$(doas jls -j ${JAIL} path 2>/dev/null || echo "/usr/local/jails/${JAIL}")
-          doas rm -rf "${JAILROOT}/tmp/zetacoin-build"
+        uses: pacyworld/freebsd-build-action/teardown@v1
+        with:
+          jail_name: ${{ env.JAIL_NAME }}
