@@ -140,7 +140,7 @@ were made.
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
-| BIP34 (coinbase height) | Not height-gated | Enforced unconditionally |
+| BIP34 (coinbase height) | Height 8,570,810 | Early blocks signal v2 but lack coinbase height |
 | BIP65 (CLTV) | Height 8,570,810 | Second attempt; first was 8,405,468 |
 | BIP66 (strict DER) | Height 8,570,810 | Tied to BIP65 height |
 | CSV (BIP68/112/113) | BIP9 bit 0 | Start Apr 7, 2018; activated ~9,213,120 |
@@ -156,7 +156,7 @@ Scanned from the old v0.13 reference node:
 | Version | Height Range | Notes |
 |---------|-------------|-------|
 | 1 | 0 (genesis only) | |
-| 2 | 1 – ~4,850,000 | BIP34 (coinbase height) |
+| 2 | 1 – ~4,850,000 | Signals BIP34 but coinbase height NOT present in early blocks |
 | 3 | ~4,850,000 – ~7,850,000 | BIP66 (strict DER) signaling |
 | 4 | ~7,850,000 – ~8,450,000 | BIP65 (CLTV) signaling |
 | 5 | ~8,450,000 – 8,570,810 | Zetacoin-specific (disconnect old peers) |
