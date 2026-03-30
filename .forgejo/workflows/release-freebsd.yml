@@ -125,15 +125,15 @@ jobs:
           # Get or create release for this tag
           RELEASE_ID=$(curl -s -H "Authorization: token ${TOKEN}" \
             "${API}/repos/${REPO}/releases/tags/${TAG}" | \
-            python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+            grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
 
-          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "None" ]; then
+          if [ -z "${RELEASE_ID}" ]; then
             echo "==> Creating Forgejo release for ${TAG}..."
             RELEASE_ID=$(curl -s -X POST -H "Authorization: token ${TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\":\"${TAG}\",\"name\":\"Zetacoin Core ${TAG}\",\"draft\":false,\"prerelease\":true}" \
               "${API}/repos/${REPO}/releases" | \
-              python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+              grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
           fi
 
           echo "==> Uploading ${DIST_TARBALL} to Forgejo release ${RELEASE_ID}..."
@@ -156,15 +156,15 @@ jobs:
           # Get or create release
           RELEASE_ID=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
             "${GH_API}/repos/${GH_REPO}/releases/tags/${TAG}" | \
-            python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+            grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
 
-          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "None" ]; then
+          if [ -z "${RELEASE_ID}" ]; then
             echo "==> Creating GitHub release for ${TAG}..."
             RELEASE_ID=$(curl -s -X POST -H "Authorization: token ${GH_TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\":\"${TAG}\",\"name\":\"Zetacoin Core ${TAG}\",\"draft\":false,\"prerelease\":true}" \
               "${GH_API}/repos/${GH_REPO}/releases" | \
-              python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+              grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
           fi
 
           UPLOAD_URL="https://uploads.github.com/repos/${GH_REPO}/releases/${RELEASE_ID}/assets"
