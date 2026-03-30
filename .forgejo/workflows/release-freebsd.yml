@@ -1,10 +1,11 @@
 # Zetacoin Core FreeBSD Release — runs on Pacyworld Forgejo runner
-# Produces a single statically-linked binary tarball built on FreeBSD 13.5
-# for maximum compatibility (runs on 13.5+, 14.x, 15.x).
+# Produces a single statically-linked binary tarball built on FreeBSD 14.3
+# for compatibility with FreeBSD 14.3+ and 15.x.
 #
 # The runner (runner01.pacyworld.com) runs FreeBSD 15.0 in host mode.
-# An ephemeral FreeBSD 13.5 jail is provisioned via the freebsd-build-action
-# to get the oldest OSREL ELF note, ensuring forward compatibility.
+# An ephemeral FreeBSD 14.3 jail is provisioned via the freebsd-build-action
+# to get a compatible OSREL ELF note (runs on 14.3+ and 15.x).
+# FreeBSD 13.x cannot be used: its clang 14 / libc++ lacks C++20 <semaphore>.
 
 name: FreeBSD Release
 on:
@@ -13,12 +14,12 @@ on:
       - 'v*'
 
 env:
-  FREEBSD_VERSION: '13.5'
-  JAIL_NAME: 'zetacoin-build-135'
+  FREEBSD_VERSION: '14.3'
+  JAIL_NAME: 'zetacoin-build-143'
 
 jobs:
   freebsd:
-    name: 'FreeBSD amd64 (static, 13.5 jail)'
+    name: 'FreeBSD amd64 (static, 14.3 jail)'
     runs-on: FreeBSD
 
     steps:
@@ -27,7 +28,7 @@ jobs:
           rm -rf zetacoin
           git clone --depth 1 --branch ${{ github.ref_name }} ${{ github.server_url }}/${{ github.repository }}.git zetacoin
 
-      - name: Provision FreeBSD 13.5 build jail
+      - name: Provision FreeBSD 14.3 build jail
         id: jail
         uses: https://pacyworld.dev/pacyworld/freebsd-build-action@master
         with:
