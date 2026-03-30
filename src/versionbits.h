@@ -16,7 +16,9 @@
 class CChainParams;
 
 /** What block version to use for new blocks (pre versionbits) */
-static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
+// Zetacoin used version 5 blocks (v0.11.3.4) before switching to versionbits.
+// Bitcoin's default is 4. See doc/CHAIN_HISTORY.md for details.
+static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 5;
 /** What bits to set in version for versionbits blocks */
 static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */

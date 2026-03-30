@@ -84,19 +84,39 @@ The `nodeStratum` pool software generated blocks using Bitcoin Core's
 coinbase outputs when SegWit is active. However, the pool's block assembly code
 did not include the witness nonce in the coinbase's witness field.
 
-Bitcoin Core includes a function `UpdateUncommittedBlockStructures()` that injects
-a default all-zeros 32-byte nonce when a block has a commitment but no witness
-data. In both the old v0.13 and new v30.2 code, this function is **only** called
-from:
+## How Bitcoin Core Handles This (UpdateUncommittedBlockStructures)
 
-1. The `submitblock` RPC handler (for locally submitted blocks)
-2. `GenerateCoinbaseCommitment()` (for block template generation)
+Bitcoin Core includes a built-in safety mechanism: `UpdateUncommittedBlockStructures()`.
+This function detects when a block has a witness commitment OP_RETURN but no
+witness nonce, and injects a default all-zeros 32-byte nonce. This ensures
+validation passes even when the mining software omits the nonce.
+
+The function is called from:
+
+1. The `submitblock` RPC handler — for blocks submitted by mining pools
+2. `GenerateCoinbaseCommitment()` — during block template generation
 3. The `bitcoin-chainstate` tool (v30.2 only)
 
-It is **not** called during normal peer-to-peer block synchronization. The old
-v0.13 reference node likely accepted these blocks through the `submitblock` path
-(as the mining node), where `UpdateUncommittedBlockStructures()` fixed up the
-missing nonce before validation.
+On the original Zetacoin network, this worked as designed:
+
+1. The nodeStratum pool submitted blocks via `submitblock` to the mining node
+2. `UpdateUncommittedBlockStructures()` injected the all-zeros nonce in-memory
+3. The block passed `ContextualCheckBlock` validation (nonce present)
+4. The block was stored to disk **with** the nonce
+5. The block was broadcast to all peers **with** the nonce in the serialization
+6. All other nodes on the network received the block with a valid nonce
+
+A single miner cannot "break" the network by omitting the nonce — the mining
+node's own daemon fixes it transparently before validation and propagation.
+
+## Why a Fresh Sync Fails
+
+The issue only surfaces when syncing a **new node from scratch** today. The
+function is **not** called during normal peer-to-peer block synchronization —
+only on the `submitblock` and block generation paths. When the old v0.13
+reference node re-serves these blocks to a new node, the blocks may arrive
+without the witness nonce (possibly due to re-serialization during a past
+reindex or data migration), causing `CheckWitnessMalleation()` to fail.
 
 ## Fix: SegwitHeight = 9,495,359
 
