@@ -156,7 +156,8 @@ public:
 
         bech32_hrp = "zet";
 
-        vFixedSeeds.clear(); // No fixed seeds yet
+        vFixedSeeds = std::vector<uint8_t>(
+            std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
