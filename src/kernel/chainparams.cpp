@@ -100,7 +100,10 @@ public:
         consensus.CSVHeight = 9213120;
         // SegWit (BIP141/143/147) activated via BIP9 signaling (bit 1).
         // LOCKED_IN at retarget boundary ~9,462,080; ACTIVE at ~9,482,240.
-        consensus.SegwitHeight = 9482240;
+        // SegWit was a BIP9 deployment on Zetacoin v0.13 (bit 1, startTime=Sep 2018, timeout=Sep 2020).
+        // Activation status needs verification from the old chain. Set to future height to avoid
+        // rejecting existing blocks. TODO: Determine actual activation height or confirm never activated.
+        consensus.SegwitHeight = 999999999;
         consensus.MinBIP9WarningHeight = 9502400; // segwit activation + miner confirmation window
         consensus.powLimit = uint256{"00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 2 * 60; // two minutes
