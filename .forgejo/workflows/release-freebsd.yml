@@ -110,6 +110,74 @@ jobs:
           echo "=== SHA256 ==="
           cat "${DIST}.tar.gz.sha256"
 
+          # Export for upload steps
+          echo "DIST_TARBALL=${DIST}.tar.gz" >> "$GITHUB_ENV"
+          echo "DIST_SHA256=${DIST}.tar.gz.sha256" >> "$GITHUB_ENV"
+
+      - name: Upload to Forgejo release
+        run: |
+          TAG="${{ github.ref_name }}"
+          API="${{ github.server_url }}/api/v1"
+          TOKEN="${{ secrets.FORGEJO_TOKEN }}"
+          REPO="${{ github.repository }}"
+
+          # Get or create release for this tag
+          RELEASE_ID=$(curl -s -H "Authorization: token ${TOKEN}" \
+            "${API}/repos/${REPO}/releases/tags/${TAG}" | \
+            python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+
+          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "None" ]; then
+            echo "==> Creating Forgejo release for ${TAG}..."
+            RELEASE_ID=$(curl -s -X POST -H "Authorization: token ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\":\"${TAG}\",\"name\":\"Zetacoin Core ${TAG}\",\"draft\":false,\"prerelease\":true}" \
+              "${API}/repos/${REPO}/releases" | \
+              python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          fi
+
+          echo "==> Uploading ${DIST_TARBALL} to Forgejo release ${RELEASE_ID}..."
+          curl -s -X POST -H "Authorization: token ${TOKEN}" \
+            -F "attachment=@${DIST_TARBALL}" \
+            "${API}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${DIST_TARBALL}"
+          curl -s -X POST -H "Authorization: token ${TOKEN}" \
+            -F "attachment=@${DIST_SHA256}" \
+            "${API}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${DIST_SHA256}"
+          echo "==> Forgejo upload complete."
+
+      - name: Upload to GitHub release
+        if: ${{ secrets.GITHUB_UPLOAD_TOKEN != '' }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          GH_API="https://api.github.com"
+          GH_TOKEN="${{ secrets.GITHUB_UPLOAD_TOKEN }}"
+          GH_REPO="tuaris/zetacoin"
+
+          # Get or create release
+          RELEASE_ID=$(curl -s -H "Authorization: token ${GH_TOKEN}" \
+            "${GH_API}/repos/${GH_REPO}/releases/tags/${TAG}" | \
+            python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+
+          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "None" ]; then
+            echo "==> Creating GitHub release for ${TAG}..."
+            RELEASE_ID=$(curl -s -X POST -H "Authorization: token ${GH_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\":\"${TAG}\",\"name\":\"Zetacoin Core ${TAG}\",\"draft\":false,\"prerelease\":true}" \
+              "${GH_API}/repos/${GH_REPO}/releases" | \
+              python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          fi
+
+          UPLOAD_URL="https://uploads.github.com/repos/${GH_REPO}/releases/${RELEASE_ID}/assets"
+          echo "==> Uploading ${DIST_TARBALL} to GitHub release ${RELEASE_ID}..."
+          curl -s -X POST -H "Authorization: token ${GH_TOKEN}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary "@${DIST_TARBALL}" \
+            "${UPLOAD_URL}?name=${DIST_TARBALL}"
+          curl -s -X POST -H "Authorization: token ${GH_TOKEN}" \
+            -H "Content-Type: text/plain" \
+            --data-binary "@${DIST_SHA256}" \
+            "${UPLOAD_URL}?name=${DIST_SHA256}"
+          echo "==> GitHub upload complete."
+
       - name: Tear down jail
         if: always()
         uses: https://pacyworld.dev/pacyworld/freebsd-build-action/teardown@master
