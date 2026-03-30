@@ -1,0 +1,170 @@
+#!/bin/sh
+
+# PROVIDE: zetacoind
+# REQUIRE: LOGIN cleanvar
+# KEYWORD: shutdown
+
+#
+# Add the following lines to /etc/rc.conf to enable :
+# zetacoind_enable (bool):	Set to "NO" by default.
+#				Set it to "YES" to enable zetacoind
+# zetacoind_user (str)		Set to "zetacoin" by default.
+# zetacoind_group (str)		Set to "zetacoin" by default.
+# zetacoind_conf (str)		Set to "/usr/local/etc/zetacoin.conf" by default.
+# zetacoind_data_dir (str)	Set to "/var/db/zetacoin" by default.
+# zetacoindlimits_enable (bool)	Set to "NO" by default.
+#				Set it to "YES" to enable zetacoindlimits
+# zetacoindlimits_args		Set to "-e -U ${zetacoind_user}" by default
+
+
+. /etc/rc.subr
+
+name="zetacoind"
+rcvar=zetacoind_enable
+
+start_precmd="zetacoind_precmd"
+start_cmd="zetacoind_start"
+restart_precmd="zetacoind_checkconfig"
+reload_precmd="zetacoind_checkconfig"
+configtest_cmd="zetacoind_checkconfig"
+status_cmd="zetacoind_status"
+stop_cmd="zetacoind_stop"
+stop_postcmd="zetacoind_wait"
+command="/usr/local/bin/zetacoind"
+daemon_command="/usr/sbin/daemon"
+pidfile="/var/run/${name}.pid"
+extra_commands="configtest"
+
+
+: ${zetacoind_enable:="NO"}
+: ${zetacoindlimits_enable:="NO"}
+
+load_rc_config ${name}
+
+: ${zetacoind_user:="zetacoin"}
+: ${zetacoind_group:="zetacoin"}
+: ${zetacoind_data_dir:="/var/db/zetacoin"}
+: ${zetacoind_config_file:="/usr/local/etc/zetacoin.conf"}
+: ${zetacoindlimits_args:="-e -U ${zetacoind_user}"}
+
+# set up dependant variables
+procname="${command}"
+required_files="${zetacoind_config_file}"
+
+
+zetacoind_checkconfig()
+{
+  echo "Performing sanity check on zetacoind configuration:"
+  if [ ! -d "${zetacoind_data_dir}" ]
+  then
+    echo "Missing data directory: ${zetacoind_data_dir}"
+    exit 1
+  fi
+  chown -R "${zetacoind_user}:${zetacoind_group}" "${zetacoind_data_dir}"
+
+  if [ ! -f "${zetacoind_config_file}" ]
+  then
+    echo "Missing configuration file: ${zetacoind_config_file}"
+    exit 1
+  fi
+  if [ ! -x "${command}" ]
+  then
+    echo "Missing executable: ${command}"
+    exit 1
+  fi
+  return 0
+}
+
+zetacoind_cleanup()
+{
+  rm -f "${pidfile}"
+}
+
+zetacoind_precmd()
+{
+  zetacoind_checkconfig
+
+  pid=$(check_pidfile "${pidfile}" "${procname}")
+  if [ -z "${pid}" ]
+  then
+    echo "Zetacoind is not running"
+    rm -f "${pidfile}"
+  fi
+
+  if checkyesno zetacoindlimits_enable
+  then
+    eval $(/usr/bin/limits ${zetacoindlimits_args}) 2>/dev/null
+  else
+    return 0
+  fi
+}
+
+zetacoind_status()
+{
+  local pid
+  pid=$(check_pidfile "${pidfile}" "${procname}")
+  if [ -z "${pid}" ]
+  then
+    echo "Zetacoind is not running"
+    return 1
+  else
+    echo "Zetacoind running, pid: ${pid}"
+  fi
+}
+
+zetacoind_start()
+{
+  echo "Starting zetacoind:"
+  cd "${zetacoind_data_dir}" || return 1
+  ${daemon_command} -u "${zetacoind_user}" -p "${pidfile}" -f \
+    ${command} \
+    -conf="${zetacoind_config_file}" \
+    -datadir="${zetacoind_data_dir}"
+}
+
+zetacoind_stop()
+{
+  echo "Stopping zetacoind:"
+  pid=$(check_pidfile "${pidfile}" "${procname}")
+  if [ -z "${pid}" ]
+  then
+    echo "Zetacoind is not running"
+    return 1
+  else
+    kill ${pid}
+  fi
+}
+
+zetacoind_wait()
+{
+  local n=60
+  echo "Waiting for zetacoind shutdown:"
+  while :
+  do
+    printf '.'
+    pid=$(check_pidfile "${pidfile}" "${procname}")
+    if [ -z "${pid}" ]
+    then
+      printf '\n'
+      break
+    fi
+    sleep 1
+    n=$((${n} - 1))
+    if [ ${n} -eq 0 -a -f "${pidfile}" ]
+    then
+      printf "\nForce shutdown"
+      kill -9 $(cat "${pidfile}")
+      for n in 1 2 3
+      do
+        printf '.'
+        sleep 1
+      done
+      printf '\n'
+      break
+    fi
+  done
+  rm -f "${pidfile}"
+  echo "Shutdown complete"
+}
+
+run_rc_command "$1"
