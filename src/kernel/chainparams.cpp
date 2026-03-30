@@ -92,9 +92,10 @@ public:
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{};
         consensus.BIP65Height = 8570810;
-        // BIP66 (strict DER) was not explicitly gated in old source.
-        // Set to 1 to enforce from near-genesis (safe: all signatures are DER-encoded).
-        consensus.BIP66Height = 1;
+        // BIP66 (strict DER) was enforced at the same height as BIP65 in the old code.
+        // Version 2 blocks (which don't signal BIP66) exist through ~height 4,850,000,
+        // so BIP66 cannot be enforced from genesis. See doc/CHAIN_HISTORY.md.
+        consensus.BIP66Height = 8570810;
         // CSV (BIP68/112/113) activated via BIP9 signaling (bit 0).
         // LOCKED_IN at retarget boundary ~9,192,960; ACTIVE at ~9,213,120.
         consensus.CSVHeight = 9213120;

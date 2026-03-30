@@ -149,6 +149,24 @@ were made.
 | Block version | 5 (pre-versionbits) | Zetacoin-specific; Bitcoin used 4 |
 | VERSIONBITS_LAST_OLD_BLOCK_VERSION | 5 | Matches Zetacoin's version 5 blocks |
 
+## Block Version Transitions
+
+Scanned from the old v0.13 reference node:
+
+| Version | Height Range | Notes |
+|---------|-------------|-------|
+| 1 | 0 (genesis only) | |
+| 2 | 1 – ~4,850,000 | BIP34 (coinbase height) |
+| 3 | ~4,850,000 – ~7,850,000 | BIP66 (strict DER) signaling |
+| 4 | ~7,850,000 – ~8,450,000 | BIP65 (CLTV) signaling |
+| 5 | ~8,450,000 – 8,570,810 | Zetacoin-specific (disconnect old peers) |
+| 0x20000000+ | 8,570,810+ | Versionbits (BIP9 signaling for CSV, SegWit) |
+
+**Critical note for v0.14.0:** BIP66Height MUST be set to 8,570,810 (not 1).
+Version 2 blocks exist through ~4.85M and would be rejected during fresh sync
+if BIP66 were enforced from genesis. The previous chainstate reindex test did
+not catch this because `-reindex-chainstate` skips `ContextualCheckBlockHeader`.
+
 ## Lessons for v0.14.0
 
 1. **BIP65_HEIGHT was wrong on the first attempt** — the developer had to
@@ -163,8 +181,17 @@ were made.
 3. **Version 5 blocks are Zetacoin-specific** — our `VERSIONBITS_LAST_OLD_BLOCK_VERSION`
    must remain 5 (not Bitcoin's default of 4).
 
-4. **No SegWit-specific workaround existed** — the witness commitment issue
+4. **BIP66Height must match the old code** — version 2 blocks exist through
+   ~4.85M, so BIP66 cannot be enforced from genesis. Both BIP65 and BIP66
+   are enforced at height 8,570,810.
+
+5. **No SegWit-specific workaround existed** — the witness commitment issue
    (blocks with commitment but no nonce) was handled by Bitcoin Core's built-in
    `UpdateUncommittedBlockStructures()` on the mining node. No emergency fix
    was needed at the time because it worked transparently via the `submitblock`
    path.
+
+6. **Reindex tests are insufficient** — `-reindex-chainstate` skips
+   `ContextualCheckBlockHeader`, which validates block versions against
+   deployment heights. A fresh peer-to-peer sync must be tested to catch
+   parameter errors like incorrect BIP66Height.
