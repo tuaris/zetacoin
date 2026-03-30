@@ -145,11 +145,11 @@ jobs:
           echo "==> Forgejo upload complete."
 
       - name: Upload to GitHub release
-        if: ${{ secrets.GITHUB_UPLOAD_TOKEN != '' }}
+        if: ${{ secrets.GH_UPLOAD_TOKEN != '' }}
         run: |
           TAG="${{ github.ref_name }}"
           GH_API="https://api.github.com"
-          GH_TOKEN="${{ secrets.GITHUB_UPLOAD_TOKEN }}"
+          GH_TOKEN="${{ secrets.GH_UPLOAD_TOKEN }}"
           GH_REPO="tuaris/zetacoin"
 
           # Get or create release
