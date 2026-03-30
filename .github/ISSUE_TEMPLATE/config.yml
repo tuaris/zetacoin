@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Bitcoin Core Security Policy
-    url: https://github.com/bitcoin/bitcoin/blob/master/SECURITY.md
+  - name: Zetacoin Core Security Policy
+    url: https://github.com/tuaris/zetacoin/blob/master/SECURITY.md
     about: View security policy
-  - name: Bitcoin Core Developers
-    url: https://bitcoincore.org
-    about: Bitcoin Core homepage
+  - name: Zetacoin Core
+    url: https://www.getzetacoin.com
+    about: Zetacoin Core homepage
