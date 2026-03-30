@@ -29,7 +29,7 @@ jobs:
 
       - name: Provision FreeBSD 13.5 build jail
         id: jail
-        uses: pacyworld/freebsd-build-action@v1
+        uses: pacyworld/freebsd-build-action@master
         with:
           version: ${{ env.FREEBSD_VERSION }}
           jail_name: ${{ env.JAIL_NAME }}
@@ -111,6 +111,6 @@ jobs:
 
       - name: Tear down jail
         if: always()
-        uses: pacyworld/freebsd-build-action/teardown@v1
+        uses: pacyworld/freebsd-build-action/teardown@master
         with:
           jail_name: ${{ env.JAIL_NAME }}
