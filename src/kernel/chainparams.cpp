@@ -88,8 +88,11 @@ public:
         consensus.nSubsidyHalvingInterval = 80640;
         // No script_flag_exceptions for Zetacoin
         // BIP34 was commented out in old Zetacoin source (never height-gated).
-        // Set to 1 to enforce from near-genesis (safe: all blocks have height in coinbase).
-        consensus.BIP34Height = 1;
+        // Early blocks signal version 2 but do NOT include height in coinbase
+        // (common in early altcoin forks). Block 690 fails "bad-cb-height" if
+        // enforced from genesis. Set to BIP65 height where coinbase height is
+        // known to be present. See doc/CHAIN_HISTORY.md.
+        consensus.BIP34Height = 8570810;
         consensus.BIP34Hash = uint256{};
         consensus.BIP65Height = 8570810;
         // BIP66 (strict DER) was enforced at the same height as BIP65 in the old code.
