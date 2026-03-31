@@ -94,6 +94,14 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 // Check that on difficulty adjustments, the new difficulty does not increase
 // or decrease beyond the permitted limits.
+//
+// Zetacoin note: The bounds are computed in full precision then converted to
+// compact nBits via GetCompact(). GetNextWorkRequired() performs the same
+// round-trip, which can round the target DOWN by up to 1 ULP in compact form.
+// To avoid rejecting valid transitions at the boundary, we subtract 1 from
+// the compact-encoded minimum (allowing slightly harder) and add 1 to the
+// compact-encoded maximum (allowing slightly easier). This matches how the
+// actual consensus code produces nBits values.
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
     if (params.fPowAllowMinDifficultyBlocks) return true;
@@ -113,12 +121,12 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
             largest_difficulty_target = pow_limit;
         }
 
-        // Compare against full-precision bound. Do NOT round-trip through
-        // SetCompact(GetCompact()) as the precision loss from compact encoding
-        // can reject valid transitions at the boundary. Zetacoin's tight 1% max
-        // upward adjustment with 80-block averaging produces transitions that
-        // exceed the compact-rounded bound by ~0.0004%.
-        if (largest_difficulty_target < observed_new_target) return false;
+        // Round-trip through compact and add 1 ULP tolerance for rounding
+        arith_uint256 maximum_new_target;
+        uint32_t largest_compact = largest_difficulty_target.GetCompact();
+        maximum_new_target.SetCompact(largest_compact == 0 ? 0 : largest_compact + 1);
+        if (maximum_new_target > pow_limit) maximum_new_target = pow_limit;
+        if (maximum_new_target < observed_new_target) return false;
 
         // Calculate the smallest difficulty value possible (max adjustment up = hardest target):
         arith_uint256 smallest_difficulty_target;
@@ -130,7 +138,11 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
             smallest_difficulty_target = pow_limit;
         }
 
-        if (smallest_difficulty_target > observed_new_target) return false;
+        // Round-trip through compact and subtract 1 ULP tolerance for rounding
+        arith_uint256 minimum_new_target;
+        uint32_t smallest_compact = smallest_difficulty_target.GetCompact();
+        minimum_new_target.SetCompact(smallest_compact <= 1 ? 0 : smallest_compact - 1);
+        if (minimum_new_target > observed_new_target) return false;
     } else if (old_nbits != new_nbits) {
         return false;
     }
