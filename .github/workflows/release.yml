@@ -139,7 +139,7 @@ jobs:
       - name: Install cross-compilation toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-mingw-w64-x86-64-posix nsis zip
+          sudo apt-get install -y g++-mingw-w64-x86-64-posix nsis zip osslsigncode
 
       - name: Restore depends cache
         uses: actions/cache/restore@v4
@@ -173,6 +173,27 @@ jobs:
       - name: Build NSIS installer
         working-directory: build
         run: cmake --build . --target deploy
+        continue-on-error: true
+
+      - name: Sign Windows binaries
+        if: ${{ secrets.CODESIGN_PFX_BASE64 != '' }}
+        uses: pacyworld/codesign-action@master
+        with:
+          pfx_base64: ${{ secrets.CODESIGN_PFX_BASE64 }}
+          pfx_password: ${{ secrets.CODESIGN_PFX_PASSWORD }}
+          files: "build/bin/*.exe"
+          name: "Zetacoin Core"
+          url: "https://www.getzetacoin.com"
+
+      - name: Sign NSIS installer
+        if: ${{ secrets.CODESIGN_PFX_BASE64 != '' }}
+        uses: pacyworld/codesign-action@master
+        with:
+          pfx_base64: ${{ secrets.CODESIGN_PFX_BASE64 }}
+          pfx_password: ${{ secrets.CODESIGN_PFX_PASSWORD }}
+          files: "build/zetacoin-win64-setup.exe"
+          name: "Zetacoin Core"
+          url: "https://www.getzetacoin.com"
         continue-on-error: true
 
       - name: Package zip
