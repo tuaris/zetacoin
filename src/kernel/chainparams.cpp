@@ -134,15 +134,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 19160;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 20160;
 
-        // Disable header pre-sync anti-DoS mechanism. Zetacoin's rapid difficulty
-        // adjustment (every 4 blocks, 80-block averaging, 1% max up) produces
-        // nBits transitions that exceed PermittedDifficultyTransition's bounds
-        // by rounding margin (~0.0004%), causing "invalid difficulty transition"
-        // during pre-sync. Setting nMinimumChainWork to zero means the node
-        // always considers itself past the minimum work threshold, skipping
-        // pre-sync entirely. This is safe for Zetacoin's small trusted network.
-        // See doc/CHAIN_HISTORY.md for details.
-        consensus.nMinimumChainWork = uint256{};
+        // From reference node at block 18,624,358
+        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000001e15a398d6744fe64b3"};
         consensus.defaultAssumeValid = uint256{"00000000af5073936a022dcbc9269536e6e5538ebd21d1cd88526f1f9600a6ee"}; // 18624358
 
         /**

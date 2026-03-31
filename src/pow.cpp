@@ -113,9 +113,12 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
             largest_difficulty_target = pow_limit;
         }
 
-        arith_uint256 maximum_new_target;
-        maximum_new_target.SetCompact(largest_difficulty_target.GetCompact());
-        if (maximum_new_target < observed_new_target) return false;
+        // Compare against full-precision bound. Do NOT round-trip through
+        // SetCompact(GetCompact()) as the precision loss from compact encoding
+        // can reject valid transitions at the boundary. Zetacoin's tight 1% max
+        // upward adjustment with 80-block averaging produces transitions that
+        // exceed the compact-rounded bound by ~0.0004%.
+        if (largest_difficulty_target < observed_new_target) return false;
 
         // Calculate the smallest difficulty value possible (max adjustment up = hardest target):
         arith_uint256 smallest_difficulty_target;
@@ -127,9 +130,7 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
             smallest_difficulty_target = pow_limit;
         }
 
-        arith_uint256 minimum_new_target;
-        minimum_new_target.SetCompact(smallest_difficulty_target.GetCompact());
-        if (minimum_new_target > observed_new_target) return false;
+        if (smallest_difficulty_target > observed_new_target) return false;
     } else if (old_nbits != new_nbits) {
         return false;
     }
