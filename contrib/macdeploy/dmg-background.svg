@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="500"
+   height="320"
+   viewBox="0 0 500 320"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="dmg-background.svg"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.91039998"
+     inkscape:cx="-181.23902"
+     inkscape:cy="115.33392"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1927"
+     inkscape:window-y="2152"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <defs
+     id="defs5">
+    <!-- Subtle teal gradient background (Zetacoin brand #1D6F89 at very low opacity) -->
+    <linearGradient
+       id="bg"
+       x1="0%"
+       y1="0%"
+       x2="0%"
+       y2="100%">
+      <stop
+         offset="0%"
+         style="stop-color:#E8F0F3;stop-opacity:1"
+         id="stop1" />
+      <stop
+         offset="50%"
+         style="stop-color:#EDF3F5;stop-opacity:1"
+         id="stop2" />
+      <stop
+         offset="100%"
+         style="stop-color:#F2F6F8;stop-opacity:1"
+         id="stop3" />
+    </linearGradient>
+    <!-- Arrow gradient (brand teal) -->
+    <linearGradient
+       id="arrow-grad"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="0%">
+      <stop
+         offset="0%"
+         style="stop-color:#1A6B85;stop-opacity:0.5"
+         id="stop4" />
+      <stop
+         offset="100%"
+         style="stop-color:#20738D;stop-opacity:0.3"
+         id="stop5" />
+    </linearGradient>
+    <rect
+       x="1029.8846"
+       y="102.17109"
+       width="845.97662"
+       height="217.965"
+       id="rect2" />
+  </defs>
+  <!-- Background -->
+  <rect
+     width="500"
+     height="320"
+     fill="url(#bg)"
+     id="rect5" />
+  <!-- Subtle bottom border line -->
+  <line
+     x1="0"
+     y1="319"
+     x2="500"
+     y2="319"
+     stroke="#C8D8DE"
+     stroke-width="1"
+     id="line5" />
+  <!-- Drag arrow: curved path from app icon area (130) to Applications area (370) -->
+  <!-- Arrowhead -->
+  <!-- Zetacoin Core wordmark (matching NSIS header styling) -->
+  <!-- Instruction text -->
+  <text
+     x="250"
+     y="282"
+     text-anchor="middle"
+     font-family="'-apple-system', BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+     font-size="11px"
+     fill="#6a8a95"
+     id="text7">Drag Zetacoin Core to the Applications folder to install</text>
+  <!-- URL text -->
+  <g
+     id="g8"
+     transform="matrix(0.72490505,0,0,0.72490505,79.047313,98.000641)">
+    <text
+       xml:space="preserve"
+       style="font-size:68.3891px;line-height:0.9;font-family:'Sackers Gothic Medium';-inkscape-font-specification:'Sackers Gothic Medium, Normal';text-align:center;letter-spacing:0.426973px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#808080;stroke-width:0.356195"
+       x="186.50072"
+       y="-52.656158"
+       id="text1"
+       transform="scale(0.88504128,1.1298908)"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:68.3891px;font-family:'Engravers\' Gothic';-inkscape-font-specification:'Engravers\' Gothic, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0.426973px;stroke-width:0.356195"
+         x="186.7142"
+         y="-52.656158">Zetacoin</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.25630006,0,0,0.25630006,-23.98495,-121.78648)"
+       id="text2"
+       style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:192px;line-height:0.9;font-family:Cinzel;-inkscape-font-specification:'Cinzel, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-6.14149px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2);display:inline;fill:#808080"><tspan
+         x="1180.2292"
+         y="245.03783"
+         id="tspan5"><tspan
+           style="font-style:italic;font-weight:600;font-family:Montserrat;-inkscape-font-specification:'Montserrat, Semi-Bold Italic';fill:#1a1a1a"
+           id="tspan4">CORE</tspan></tspan></text>
+  </g>
+  <path
+     style="clip-rule:evenodd;fill:#1D6F89;fill-rule:evenodd;opacity:0.35"
+     d="m 307.72252,132.49878 c -1.283,-1.167 -2.604,-2.295 -3.842,-3.507 -2.557,-2.498 -5.107,-5.002 -7.59,-7.572 -3.467,-3.59 -6.037,-7.781 -8.008,-12.351 -0.922,-2.139 -1.348,-4.359 -1.27,-6.704 0.053,-1.541 0.734,-2.58 2.037,-3.273 4.395,-2.341 10.668,-0.817 13.412,3.308 0.941,1.414 1.838,2.876 2.566,4.407 3.477,7.312 8.424,13.579 13.869,19.465 3.551,3.838 7.305,7.489 10.965,11.227 0.236,0.242 0.602,0.487 0.643,0.77 0.197,1.3 1.168,1.603 2.203,1.884 0.242,0.066 0.477,0.189 0.689,0.325 0.891,0.568 1.885,1.046 1.914,2.337 0.031,1.342 -0.914,1.945 -1.887,2.489 -2.215,1.241 -4.693,1.425 -7.145,1.679 -10.824,1.12 -21.668,2.211 -32.123,5.406 -5.762,1.76 -11.393,3.942 -17.074,5.959 -2.984,1.06 -5.988,1.928 -9.211,1.436 -0.125,-0.02 -0.258,-0.001 -0.381,-0.027 -1.346,-0.295 -2.809,-0.586 -3.307,-2.043 -0.506,-1.484 0.592,-2.512 1.602,-3.35 3.842,-3.191 8.326,-5.244 12.916,-7.079 8.072,-3.227 16.522,-4.866 25.107,-5.929 1.391,-0.172 2.779,-0.356 4.393,-0.564 -0.397,-0.242 -0.609,-0.411 -0.85,-0.511 -10.832,-4.502 -21.744,-8.762 -33.26,-11.249 -10.066,-2.174 -20.254,-2.981 -30.537,-2.788 -13.738,0.258 -27.02,2.77 -39.76,7.971 -1.412,0.577 -2.758,1.318 -4.124,2.003 -2.537,1.273 -5.146,1.428 -7.778,0.396 -2.103,-0.824 -2.444,-2.51 -0.554,-3.685 2.617,-1.626 5.381,-3.104 8.247,-4.222 9.223,-3.6 18.807,-5.813 28.626,-7.069 10.814,-1.384 21.648,-1.23 32.477,-0.396 15.838,1.221 31.064,5.072 45.771,11.03 0.379,0.153 0.77,0.275 1.154,0.411 0.04,-0.062 0.075,-0.123 0.11,-0.184 z"
+     id="path1688"
+     transform="translate(-60, 18) scale(1.15, 1)" />
+</svg>

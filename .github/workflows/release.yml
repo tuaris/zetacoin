@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies
         env:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq qt@6 qrencode create-dmg
+        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq qt@6 qrencode create-dmg librsvg
 
       - name: Configure
         run: cmake -B build -DBUILD_GUI=ON -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
@@ -84,6 +84,12 @@ jobs:
       - name: Create app bundle
         working-directory: build
         run: cmake --build . --target deploy
+
+      - name: Generate DMG background from SVG
+        run: |
+          rsvg-convert -w 1000 -h 640 \
+            "${GITHUB_WORKSPACE}/contrib/macdeploy/dmg-background.svg" \
+            -o "${GITHUB_WORKSPACE}/build/dmg-background.png"
 
       - name: Create DMG
         working-directory: build
@@ -101,6 +107,7 @@ jobs:
           # Create branded DMG with Firefox-style layout
           create-dmg \
             --volname "${VOLNAME}" \
+            --background "dmg-background.png" \
             --window-pos 200 120 \
             --window-size 500 320 \
             --icon-size 128 \

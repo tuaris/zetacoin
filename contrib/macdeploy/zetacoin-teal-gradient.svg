@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="320" viewBox="0 0 500 320">
+  <!-- Zetacoin brand teal gradient background (for website/marketing use) -->
+  <!-- Based on Zetacoin logo teal #1D6F89 at 4-8% opacity on white -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8F0F3;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#EDF3F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F2F6F8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="320" fill="url(#bg)"/>
+</svg>
