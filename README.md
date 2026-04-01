@@ -36,6 +36,12 @@ rebased onto Bitcoin Core 30.2 while preserving all original consensus rules.
 
 Further information is available in the [doc folder](/doc).
 
+### macOS Note
+
+On first launch, macOS may show a Gatekeeper warning because the app is not
+Apple-notarized. Right-click the app and select **Open** to bypass the warning.
+See [doc/install-macos.md](doc/install-macos.md) for detailed instructions.
+
 License
 -------
 
