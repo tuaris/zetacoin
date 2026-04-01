@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies
         env:
           HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq qt@6 qrencode
+        run: brew install --quiet cmake boost libevent pkgconf sqlite zmq qt@6 qrencode create-dmg
 
       - name: Configure
         run: cmake -B build -DBUILD_GUI=ON -DBUILD_TESTS=OFF -DBUILD_BENCH=OFF -DENABLE_IPC=OFF -DCMAKE_BUILD_TYPE=Release
@@ -90,20 +90,26 @@ jobs:
         run: |
           VOLNAME="Zetacoin-Core"
           DMG_NAME="zetacoin-${VERSION#v}-macos-${{ matrix.arch }}.dmg"
-          # Find the .app bundle in dist/ (cross-compile path) or current dir (native path)
-          if [ -d "dist/${VOLNAME}.app" ] || [ -d "dist/Zetacoin-Qt.app" ]; then
-            APP_DIR="dist"
+          # Find the .app bundle
+          if [ -d "dist/Zetacoin-Qt.app" ]; then
+            APP_PATH="dist/Zetacoin-Qt.app"
           else
-            APP_DIR="."
+            APP_PATH="Zetacoin-Qt.app"
           fi
-          # Create a temporary DMG staging directory
-          mkdir -p dmg_staging
-          cp -R "${APP_DIR}/Zetacoin-Qt.app" dmg_staging/
-          cp "${GITHUB_WORKSPACE}/COPYING" dmg_staging/LICENSE.txt
-          # Create symlink to /Applications for drag-and-drop install
-          ln -s /Applications dmg_staging/Applications
-          # Create the DMG
-          hdiutil create -volname "${VOLNAME}" -srcfolder dmg_staging -ov -format UDZO "${DMG_NAME}"
+          # Rename to "Zetacoin Core.app" for cleaner display in DMG
+          cp -R "${APP_PATH}" "Zetacoin Core.app"
+          # Create branded DMG with Firefox-style layout
+          create-dmg \
+            --volname "${VOLNAME}" \
+            --window-pos 200 120 \
+            --window-size 500 320 \
+            --icon-size 128 \
+            --icon "Zetacoin Core.app" 130 150 \
+            --app-drop-link 370 150 \
+            --hide-extension "Zetacoin Core.app" \
+            --no-internet-enable \
+            "${DMG_NAME}" \
+            "Zetacoin Core.app" || true
           shasum -a 256 "${DMG_NAME}" > "${DMG_NAME}.sha256"
 
       - name: Also package as tarball
