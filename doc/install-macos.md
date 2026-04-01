@@ -22,7 +22,7 @@
 
    To open the app, use one of these methods:
 
-### Method 1: Right-click to Open (Recommended)
+### Method 1: Right-click to Open (macOS 14 and earlier)
 
 1. Open **Applications** in Finder
 2. **Right-click** (or Control-click) on **Zetacoin Core**
@@ -31,16 +31,24 @@
 
 You only need to do this once. After the first launch, you can open the app normally.
 
-### Method 2: System Settings
+> **Note:** Apple removed this method starting with macOS 15 Sequoia.
+> Use Method 2 or 3 instead.
 
-1. Open **System Settings** → **Privacy & Security**
-2. Scroll down to the **Security** section
-3. You should see a message about "Zetacoin Core" being blocked
-4. Click **Open Anyway**
+### Method 2: System Settings (Recommended for macOS 15+)
+
+1. Double-click **Zetacoin Core** — the warning dialog will appear. Click **Done**.
+2. Open **System Settings** → **Privacy & Security**
+3. Scroll down to the **Security** section
+4. You should see a message: *"Zetacoin Core" was blocked to protect your Mac*
+5. Click **Open Anyway**
+6. Enter your password when prompted
+7. Click **Open** in the final confirmation dialog
+
+You only need to do this once. After the first launch, you can open the app normally.
 
 ### Method 3: Terminal
 
-Remove the quarantine attribute:
+Remove the quarantine attribute before first launch:
 
 ```sh
 xattr -d com.apple.quarantine /Applications/Zetacoin\ Core.app
